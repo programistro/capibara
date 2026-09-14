@@ -8,12 +8,13 @@ import android.os.Build
 import com.example.capibara.domain.model.Periodicity
 import com.example.capibara.domain.model.Reminder
 import com.example.capibara.domain.scheduler.ReminderScheduler
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.text.SimpleDateFormat
 import java.util.Locale
 import javax.inject.Inject
 
 class AlarmReminderScheduler @Inject constructor(
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) : ReminderScheduler {
 
     override fun schedule(reminder: Reminder) {

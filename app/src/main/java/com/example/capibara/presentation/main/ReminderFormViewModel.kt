@@ -1,14 +1,16 @@
 package com.example.capibara.presentation.main
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.example.capibara.domain.usecase.SaveReminderUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
-class ReminderFormViewModel(
+@HiltViewModel
+class ReminderFormViewModel @Inject constructor(
     private val saveReminder: SaveReminderUseCase
 ) : ViewModel() {
 
@@ -39,18 +41,5 @@ class ReminderFormViewModel(
         } else {
             _uiState.update { it.copy(error = "Заполните название, дату и время") }
         }
-    }
-}
-
-class ReminderFormViewModelFactory(
-    private val saveReminderUseCase: SaveReminderUseCase
-) : ViewModelProvider.Factory {
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(ReminderFormViewModel::class.java)) {
-            return ReminderFormViewModel(saveReminderUseCase) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
 }

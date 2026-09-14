@@ -1,16 +1,18 @@
 package com.example.capibara.presentation.registration
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.example.capibara.domain.usecase.LoginWithPinUseCase
 import com.example.capibara.domain.usecase.RegisterPinUseCase
 import com.example.capibara.domain.usecase.RegisterResult
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
-class RegistrationViewModel(
+@HiltViewModel
+class RegistrationViewModel @Inject constructor(
     private val registerPin: RegisterPinUseCase
 ) : ViewModel() {
 
@@ -46,18 +48,5 @@ class RegistrationViewModel(
                 it.copy(error = "Пин-коды не совпадают")
             }
         }
-    }
-}
-
-class RegistrationViewModelFactory(
-    private val registerPinUseCase: RegisterPinUseCase
-) : ViewModelProvider.Factory {
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(RegistrationViewModel::class.java)) {
-            return RegistrationViewModel(registerPinUseCase) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
 }

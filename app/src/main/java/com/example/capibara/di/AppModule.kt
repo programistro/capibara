@@ -12,13 +12,19 @@ import com.example.capibara.domain.scheduler.ReminderScheduler
 import com.example.capibara.notifications.AlarmReminderScheduler
 import dagger.Module
 import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
 
 @Module
+@InstallIn(SingletonComponent::class)
 object AppModule {
 
     @Provides
     @JvmStatic
-    fun provideSharedPreferences(context: Context): SharedPreferences =
+    fun provideSharedPreferences(
+        @ApplicationContext context: Context
+    ): SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     @Provides

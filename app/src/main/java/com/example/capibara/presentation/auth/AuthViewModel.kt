@@ -1,14 +1,16 @@
 package com.example.capibara.presentation.auth
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.example.capibara.domain.usecase.LoginWithPinUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
-class AuthViewModel(
+@HiltViewModel
+class AuthViewModel @Inject constructor(
     private val loginWithPin: LoginWithPinUseCase
 ) : ViewModel() {
 
@@ -30,18 +32,5 @@ class AuthViewModel(
         } else {
             _uiState.update { it.copy(error = "Неверный пин-код") }
         }
-    }
-}
-
-class AuthViewModelFactory(
-    private val loginWithPinUseCase: LoginWithPinUseCase
-) : ViewModelProvider.Factory {
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
-            return AuthViewModel(loginWithPinUseCase) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
 }
