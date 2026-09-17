@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+# Содержит ключи Firebase — не коммитить
+google-services.json
