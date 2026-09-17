@@ -71,6 +71,7 @@ fun AppNavGraph(startDestination: String) {
                 onAddClick = mainViewModel::onOpenForm,
                 onTodayClick = mainViewModel::onTodayClick,
                 onBuyClick = shopViewModel::onBuyClick,
+                onClearError = shopViewModel::onClearError,
                 onShopBackClick = { mainViewModel.onTabSelected(MainTab.HOME) },
                 onFormTitleChange = formViewModel::onTitleChange,
                 onFormDateChange = formViewModel::onDateChange,

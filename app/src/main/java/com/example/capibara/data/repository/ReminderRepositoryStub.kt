@@ -5,7 +5,6 @@ import com.example.capibara.domain.repository.ReminderRepository
 import javax.inject.Inject
 
 class ReminderRepositoryStub @Inject constructor() : ReminderRepository {
-
     private val reminders = mutableListOf<Reminder>()
     private var nextId = 1L
 

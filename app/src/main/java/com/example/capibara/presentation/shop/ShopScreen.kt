@@ -1,5 +1,6 @@
 package com.example.capibara.presentation.shop
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,9 +17,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -35,9 +38,18 @@ import com.example.capibara.ui.theme.PrimaryGreen
 @Composable
 fun ShopScreen(
     state: ShopUiState,
-    onBuyClick: (Int) -> Unit,
-    onBackClick: () -> Unit
+    onBuyClick: (ShopItem) -> Unit,
+    onBackClick: () -> Unit,
+    onClearError:() -> Unit
 ) {
+    val context = LocalContext.current
+
+    LaunchedEffect(state.error) {
+        state.error?.let {
+            Toast.makeText(context, state.error, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -62,7 +74,7 @@ fun ShopScreen(
                 ShopItemCard(
                     item = item,
                     purchased = item.id in state.purchasedIds,
-                    onBuyClick = { onBuyClick(item.id) }
+                    onBuyClick = { onBuyClick(item) }
                 )
             }
         }
@@ -158,7 +170,8 @@ private fun ShopScreenPreview() {
                 )
             ),
             onBuyClick = {},
-            onBackClick = {}
+            onBackClick = {},
+            onClearError = {}
         )
     }
 }

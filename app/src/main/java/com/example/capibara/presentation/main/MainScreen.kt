@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.capibara.R
 import com.example.capibara.domain.model.PetStats
+import com.example.capibara.domain.model.ShopItem
 import com.example.capibara.presentation.shop.ShopScreen
 import com.example.capibara.presentation.shop.ShopUiState
 import com.example.capibara.ui.theme.CapibaraTheme
@@ -74,8 +75,9 @@ fun MainScreen(
     onTabSelected: (Int) -> Unit,
     onAddClick: () -> Unit,
     onTodayClick: () -> Unit,
-    onBuyClick: (Int) -> Unit,
+    onBuyClick: (ShopItem) -> Unit,
     onShopBackClick: () -> Unit,
+    onClearError: () -> Unit,
     onFormTitleChange: (String) -> Unit,
     onFormDateChange: (String) -> Unit,
     onFormTimeChange: (String) -> Unit,
@@ -123,7 +125,7 @@ fun MainScreen(
                         .align(Alignment.TopEnd)
                         .statusBarsPadding()
                         .padding(12.dp)
-                        .width(150.dp)
+                        .width(130.dp)
                 )
             }
         }
@@ -131,7 +133,7 @@ fun MainScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(horizontal = 12.dp),
+                .padding(top = 5.dp, start = 12.dp, end = 12.dp),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
@@ -148,7 +150,8 @@ fun MainScreen(
                 state.selectedTab == MainTab.SHOP -> ShopScreen(
                     state = shopState,
                     onBuyClick = onBuyClick,
-                    onBackClick = onShopBackClick
+                    onBackClick = onShopBackClick,
+                    onClearError = onClearError
                 )
                 state.selectedTab == MainTab.GAMES -> StubTab(
                     title = "Игры",
@@ -348,16 +351,15 @@ private fun MoodCard(stats: PetStats, modifier: Modifier = Modifier) {
             Text(
                 text = "Настроение капибары",
                 fontSize = 13.sp,
+                lineHeight = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
-            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Сегодня: ${stats.todayDone}/${stats.todayTotal}",
                 fontSize = 12.sp,
                 color = Color.DarkGray
             )
-            Spacer(modifier = Modifier.height(4.dp))
             LinearProgressIndicator(
                 progress = { 0f },
                 modifier = Modifier.fillMaxWidth(),
@@ -378,7 +380,6 @@ private fun MoodCard(stats: PetStats, modifier: Modifier = Modifier) {
                 color = MoodProgressYellow,
                 trackColor = Color.LightGray
             )
-            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "${stats.moodScore}/${stats.moodMax}",
                 fontSize = 12.sp,
@@ -455,7 +456,8 @@ private fun MainScreenPreview() {
             onFormTimeChange = {},
             onFormPeriodicityChange = {},
             onFormSaveClick = {},
-            onFormClose = {}
+            onFormClose = {},
+            onClearError = {}
         )
     }
 }
