@@ -28,7 +28,7 @@ class ShopViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             inventoryRepository.observeOwnedIds().collect { ids ->
-                _uiState.update { it.copy(items = getShopItems()) }
+                _uiState.update { it.copy(purchasedIds = ids) }
             }
         }
     }
@@ -37,13 +37,10 @@ class ShopViewModel @Inject constructor(
             val result = buyItem.invoke(item)
             when (result) {
                 BuyResult.Success -> {
-                    _uiState.update { it.copy(purchasedIds = it.purchasedIds + item.id) }
-                    _uiState.update { it.copy(items = getShopItems()) }
+                    // purchasedIds приедет сам через Flow из базы
                 }
                 BuyResult.NotEnoughCoins -> _uiState.update { it.copy(error = "Не хватает монет") }
-                BuyResult.AlreadyOwned -> {
-                    inventoryRepository.markOwned(item.id)
-                }
+                BuyResult.AlreadyOwned -> _uiState.update { it.copy(error = "Уже куплено") }
             }
         }
     }

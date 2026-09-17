@@ -5,19 +5,22 @@ data class Reminder(
     val title: String,
     val date: String,
     val time: String,
-    val periodicity: String = Periodicity.DAILY
+    val periodicity: String = Periodicity.DAILY,
+    val notifyBeforeMinutes: Int = DEFAULT_NOTIFY_BEFORE_MINUTES
 )
 
 object Periodicity {
     const val DAILY = "Ежедневно"
-    const val TWICE_A_DAY = "Дважды в день"
+    const val EVERY_12_HOURS = "Каждые 12 часов"
     const val WEEKLY = "Еженедельно"
 
-    val all = listOf(DAILY, TWICE_A_DAY, WEEKLY)
+    val all = listOf(DAILY, EVERY_12_HOURS, WEEKLY)
 
     fun intervalMillis(periodicity: String): Long = when (periodicity) {
-        TWICE_A_DAY -> 12 * android.text.format.DateUtils.HOUR_IN_MILLIS
+        EVERY_12_HOURS -> 12 * android.text.format.DateUtils.HOUR_IN_MILLIS
         WEEKLY -> android.text.format.DateUtils.WEEK_IN_MILLIS
         else -> android.text.format.DateUtils.DAY_IN_MILLIS
     }
 }
+
+const val DEFAULT_NOTIFY_BEFORE_MINUTES = 180

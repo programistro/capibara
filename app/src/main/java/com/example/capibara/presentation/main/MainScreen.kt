@@ -1,12 +1,15 @@
 package com.example.capibara.presentation.main
 
 import android.Manifest
+import android.app.DatePickerDialog
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,6 +44,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.capibara.R
 import com.example.capibara.domain.model.PetStats
+import com.example.capibara.domain.model.Reminder
 import com.example.capibara.domain.model.ShopItem
 import com.example.capibara.presentation.shop.ShopScreen
 import com.example.capibara.presentation.shop.ShopUiState
@@ -66,6 +71,8 @@ import com.example.capibara.ui.theme.MoodProgressYellow
 import com.example.capibara.ui.theme.PrimaryGreen
 import com.example.capibara.ui.theme.ScreenBackground
 import com.example.capibara.ui.theme.StarYellow
+import java.util.Calendar
+import java.util.Locale
 
 @Composable
 fun MainScreen(
@@ -75,6 +82,7 @@ fun MainScreen(
     onTabSelected: (Int) -> Unit,
     onAddClick: () -> Unit,
     onTodayClick: () -> Unit,
+    onDateSelected: (String) -> Unit,
     onBuyClick: (ShopItem) -> Unit,
     onShopBackClick: () -> Unit,
     onClearError: () -> Unit,
@@ -82,6 +90,8 @@ fun MainScreen(
     onFormDateChange: (String) -> Unit,
     onFormTimeChange: (String) -> Unit,
     onFormPeriodicityChange: (String) -> Unit,
+    onFormNotifyEnabledChange: (Boolean) -> Unit,
+    onFormNotifyMinutesChange: (String) -> Unit,
     onFormSaveClick: () -> Unit,
     onFormClose: () -> Unit
 ) {
@@ -144,6 +154,8 @@ fun MainScreen(
                     onDateChange = onFormDateChange,
                     onTimeChange = onFormTimeChange,
                     onPeriodicityChange = onFormPeriodicityChange,
+                    onNotifyEnabledChange = onFormNotifyEnabledChange,
+                    onNotifyMinutesChange = onFormNotifyMinutesChange,
                     onSaveClick = onFormSaveClick,
                     onClose = onFormClose
                 )
@@ -157,14 +169,14 @@ fun MainScreen(
                     title = "Игры",
                     text = "Тетрис скоро появится"
                 )
-                state.selectedTab == MainTab.DOCTOR -> StubTab(
-                    title = "Врач",
-                    text = "Раздел скоро появится"
+                state.selectedTab == MainTab.DOCTOR -> DoctorTab(
+                    reminders = state.allReminders
                 )
                 else -> HomeTab(
                     state = state,
                     onAddClick = onAddClick,
-                    onTodayClick = onTodayClick
+                    onTodayClick = onTodayClick,
+                    onDateSelected = onDateSelected
                 )
             }
         }
@@ -200,8 +212,25 @@ private fun RequestNotificationPermission() {
 private fun HomeTab(
     state: MainUiState,
     onAddClick: () -> Unit,
-    onTodayClick: () -> Unit
+    onTodayClick: () -> Unit,
+    onDateSelected: (String) -> Unit
 ) {
+    val context = LocalContext.current
+    val dateLabel = if (state.isToday) "Сегодня (${state.date})" else state.date
+    val dateDialog = remember {
+        val calendar = Calendar.getInstance()
+        DatePickerDialog(
+            context,
+            { _, year, month, day ->
+                onDateSelected(
+                    String.format(Locale.getDefault(), "%02d.%02d.%d", day, month + 1, year)
+                )
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -244,11 +273,17 @@ private fun HomeTab(
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
-                text = state.date,
+                text = dateLabel,
                 fontSize = 18.sp,
-                color = Color.Black
+                color = Color.Black,
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = { dateDialog.show() }
+                    )
             )
-            Spacer(modifier = Modifier.weight(1f))
             Button(
                 onClick = onTodayClick,
                 shape = RoundedCornerShape(20.dp),
@@ -263,7 +298,7 @@ private fun HomeTab(
         Spacer(modifier = Modifier.height(24.dp))
         if (state.reminders.isEmpty()) {
             Text(
-                text = "На ${state.date} лекарств нет",
+                text = "На $dateLabel лекарств нет",
                 fontSize = 18.sp,
                 color = Color.Black,
                 textAlign = TextAlign.Center,
@@ -279,6 +314,54 @@ private fun HomeTab(
                         fontSize = 18.sp,
                         color = Color.Black
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DoctorTab(reminders: List<Reminder>) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp)
+    ) {
+        Text(
+            text = "Мои напоминания",
+            fontSize = 26.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        if (reminders.isEmpty()) {
+            Text(
+                text = "Пока нет ни одного напоминания",
+                fontSize = 18.sp,
+                color = Color.Black,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(reminders) { reminder ->
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = reminder.title,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                        Text(
+                            text = "${reminder.date} в ${reminder.time} • ${reminder.periodicity}",
+                            fontSize = 14.sp,
+                            color = Color.DarkGray
+                        )
+                    }
                 }
             }
         }
@@ -449,12 +532,15 @@ private fun MainScreenPreview() {
             onTabSelected = {},
             onAddClick = {},
             onTodayClick = {},
+            onDateSelected = {},
             onBuyClick = {},
             onShopBackClick = {},
             onFormTitleChange = {},
             onFormDateChange = {},
             onFormTimeChange = {},
             onFormPeriodicityChange = {},
+            onFormNotifyEnabledChange = {},
+            onFormNotifyMinutesChange = {},
             onFormSaveClick = {},
             onFormClose = {},
             onClearError = {}

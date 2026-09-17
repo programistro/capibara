@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -114,6 +115,8 @@ fun UnderlineTextField(
     placeholder: String,
     modifier: Modifier = Modifier,
     readOnly: Boolean = false,
+    enabled: Boolean = true,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
     TextField(
@@ -122,12 +125,18 @@ fun UnderlineTextField(
         placeholder = { Text(text = placeholder, color = Color.Gray) },
         singleLine = true,
         readOnly = readOnly,
+        enabled = enabled,
+        keyboardOptions = keyboardOptions,
         trailingIcon = trailingIcon,
         shape = RectangleShape,
         colors = TextFieldDefaults.colors(
             focusedContainerColor = Color.Transparent,
             unfocusedContainerColor = Color.Transparent,
             disabledContainerColor = Color.Transparent,
+            disabledTextColor = Color.Black,
+            disabledPlaceholderColor = Color.Gray,
+            disabledIndicatorColor = Color.LightGray,
+            disabledTrailingIconColor = Color.Gray,
             focusedIndicatorColor = Color.Gray,
             unfocusedIndicatorColor = Color.LightGray
         ),

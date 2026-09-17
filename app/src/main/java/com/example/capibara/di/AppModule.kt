@@ -37,26 +37,32 @@ object AppModule {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     @Provides
+    @Singleton
     @JvmStatic
     fun provideAuthRepository(impl: AuthRepositoryImpl): AuthRepository = impl
 
     @Provides
+    @Singleton
     @JvmStatic
     fun providePetRepository(impl: PetRepositoryStub): PetRepository = impl
 
     @Provides
+    @Singleton
     @JvmStatic
     fun provideReminderRepository(impl: ReminderRepositoryStub): ReminderRepository = impl
 
     @Provides
+    @Singleton
     @JvmStatic
     fun provideReminderScheduler(impl: AlarmReminderScheduler): ReminderScheduler = impl
 
     @Provides
+    @Singleton
     @JvmStatic
     fun provideWalletRepository(impl: WalletRepositoryImpl): WalletRepository = impl
 
     @Provides
+    @Singleton
     @JvmStatic
     fun provideInventoryRepository(impl: InventoryRepositoryImpl): InventoryRepository = impl
 

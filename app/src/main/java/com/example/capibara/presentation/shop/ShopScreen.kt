@@ -47,6 +47,7 @@ fun ShopScreen(
     LaunchedEffect(state.error) {
         state.error?.let {
             Toast.makeText(context, state.error, Toast.LENGTH_SHORT).show()
+            onClearError()
         }
     }
 

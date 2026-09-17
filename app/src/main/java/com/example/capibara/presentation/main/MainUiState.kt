@@ -5,8 +5,10 @@ import com.example.capibara.domain.model.Reminder
 
 data class MainUiState(
     val date: String = "",
+    val isToday: Boolean = true,
     val petStats: PetStats? = null,
     val reminders: List<Reminder> = emptyList(),
+    val allReminders: List<Reminder> = emptyList(),
     val selectedTab: Int = MainTab.HOME,
     val isFormOpen: Boolean = false
 )

@@ -1,7 +1,9 @@
 package com.example.capibara.navigation
 
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
@@ -16,10 +18,14 @@ import com.example.capibara.presentation.main.ReminderFormViewModel
 import com.example.capibara.presentation.registration.RegistrationScreen
 import com.example.capibara.presentation.registration.RegistrationViewModel
 import com.example.capibara.presentation.shop.ShopViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun AppNavGraph(startDestination: String) {
     val navController = rememberNavController()
+    val context = LocalContext.current
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -70,6 +76,7 @@ fun AppNavGraph(startDestination: String) {
                 onTabSelected = mainViewModel::onTabSelected,
                 onAddClick = mainViewModel::onOpenForm,
                 onTodayClick = mainViewModel::onTodayClick,
+                onDateSelected = mainViewModel::onDateSelected,
                 onBuyClick = shopViewModel::onBuyClick,
                 onClearError = shopViewModel::onClearError,
                 onShopBackClick = { mainViewModel.onTabSelected(MainTab.HOME) },
@@ -77,8 +84,21 @@ fun AppNavGraph(startDestination: String) {
                 onFormDateChange = formViewModel::onDateChange,
                 onFormTimeChange = formViewModel::onTimeChange,
                 onFormPeriodicityChange = formViewModel::onPeriodicityChange,
+                onFormNotifyEnabledChange = formViewModel::onNotifyEnabledChange,
+                onFormNotifyMinutesChange = formViewModel::onNotifyMinutesChange,
                 onFormSaveClick = {
-                    formViewModel.onSaveClick { mainViewModel.onCloseForm() }
+                    formViewModel.onSaveClick { triggerAt ->
+                        if (triggerAt != null) {
+                            val text = SimpleDateFormat("dd.MM.yyyy, HH:mm", Locale.getDefault())
+                                .format(Date(triggerAt))
+                            Toast.makeText(
+                                context,
+                                "Уведомление придёт: $text",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        mainViewModel.onCloseForm()
+                    }
                 },
                 onFormClose = mainViewModel::onCloseForm
             )

@@ -11,6 +11,8 @@ class ReminderRepositoryStub @Inject constructor() : ReminderRepository {
     override fun getReminders(date: String): List<Reminder> =
         reminders.filter { it.date == date }
 
+    override fun getAllReminders(): List<Reminder> = reminders.toList()
+
     override fun saveReminder(reminder: Reminder): Long {
         val id = nextId++
         reminders.add(reminder.copy(id = id))

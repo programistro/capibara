@@ -1,6 +1,7 @@
 package com.example.capibara.presentation.main
 
 import androidx.lifecycle.ViewModel
+import com.example.capibara.domain.model.DEFAULT_NOTIFY_BEFORE_MINUTES
 import com.example.capibara.domain.usecase.SaveReminderUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,11 +34,32 @@ class ReminderFormViewModel @Inject constructor(
         _uiState.update { it.copy(periodicity = periodicity, error = null) }
     }
 
-    fun onSaveClick(onSaved: () -> Unit) {
+    fun onNotifyEnabledChange(enabled: Boolean) {
+        _uiState.update { it.copy(notifyEnabled = enabled, error = null) }
+    }
+
+    fun onNotifyMinutesChange(minutes: String) {
+        _uiState.update {
+            it.copy(
+                notifyMinutes = minutes.filter(Char::isDigit).take(4),
+                error = null
+            )
+        }
+    }
+
+    fun onSaveClick(onSaved: (triggerAtMillis: Long?) -> Unit) {
         val state = _uiState.value
-        val id = saveReminder(state.title, state.date, state.time, state.periodicity)
-        if (id != null && id > 0) {
-            onSaved()
+        val minutes = state.notifyMinutes.toIntOrNull() ?: DEFAULT_NOTIFY_BEFORE_MINUTES
+        val result = saveReminder(
+            state.title,
+            state.date,
+            state.time,
+            state.periodicity,
+            minutes,
+            state.notifyEnabled
+        )
+        if (result != null && result.id > 0) {
+            onSaved(result.triggerAtMillis)
         } else {
             _uiState.update { it.copy(error = "Заполните название, дату и время") }
         }
