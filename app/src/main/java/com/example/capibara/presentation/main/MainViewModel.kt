@@ -33,7 +33,8 @@ class MainViewModel @Inject constructor(
             date = today,
             petStats = getPetStats(),
             reminders = getReminders(today),
-            allReminders = getAllReminders()
+            allReminders = getAllReminders(),
+            selectedTab = MainTab.SHOP
         )
     )
 
@@ -47,7 +48,7 @@ class MainViewModel @Inject constructor(
 
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
-    fun onTabSelected(index: Int) {
+    fun onTabSelected(index: MainTab) {
         _uiState.update { it.copy(selectedTab = index, isFormOpen = false) }
     }
 

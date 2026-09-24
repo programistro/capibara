@@ -6,6 +6,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,6 +34,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Checkroom
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
@@ -41,6 +44,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,6 +52,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -73,13 +78,16 @@ import com.example.capibara.ui.theme.ScreenBackground
 import com.example.capibara.ui.theme.StarYellow
 import java.util.Calendar
 import java.util.Locale
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.clip
+import androidx.core.graphics.component1
 
 @Composable
 fun MainScreen(
     state: MainUiState,
     shopState: ShopUiState,
     formState: ReminderFormUiState,
-    onTabSelected: (Int) -> Unit,
+    onTabSelected: (MainTab) -> Unit,
     onAddClick: () -> Unit,
     onTodayClick: () -> Unit,
     onDateSelected: (String) -> Unit,
@@ -184,11 +192,23 @@ fun MainScreen(
         BottomMenu(
             selectedTab = state.selectedTab,
             onTabSelected = onTabSelected,
-            modifier = Modifier.navigationBarsPadding()
         )
-        Spacer(modifier = Modifier.height(12.dp))
     }
 }
+
+enum class MainTab {
+    HOME,
+    SHOP,
+    GAMES,
+    DOCTOR
+}
+
+val BottomNavItems = listOf(
+    BottomDestination.Games,
+    BottomDestination.Shop,
+    BottomDestination.NotifyCreate,
+    BottomDestination.Doctor,
+)
 
 @Composable
 private fun RequestNotificationPermission() {
@@ -476,38 +496,108 @@ private fun MoodCard(stats: PetStats, modifier: Modifier = Modifier) {
 
 @Composable
 private fun BottomMenu(
-    selectedTab: Int,
-    onTabSelected: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    selectedTab: MainTab,
+    onTabSelected: (MainTab) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    val icons: List<ImageVector> = listOf(
-        Icons.Filled.SportsEsports,
-        Icons.Filled.Checkroom,
-        Icons.Filled.Medication,
-        Icons.Filled.MedicalServices
-    )
-    Row(
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        modifier = modifier.fillMaxWidth()
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = Color.White,
+        shadowElevation = 8.dp,
     ) {
-        icons.forEachIndexed { index, icon ->
-            IconButton(
-                onClick = { onTabSelected(index) },
-                modifier = Modifier
-                    .size(68.dp)
-                    .background(
-                        if (index == selectedTab) PrimaryGreen else PrimaryGreen.copy(alpha = 0.5f),
-                        RoundedCornerShape(22.dp)
-                    )
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = IconDark,
-                    modifier = Modifier.size(36.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(72.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            BottomNavItems.forEach { item ->
+                BottomBarItem(
+                    item = item,
+                    selected = item.tab == selectedTab,
+                    onClick = { onTabSelected(item.tab) },
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
+    }
+}
+
+
+sealed class BottomDestination(
+    val tab: MainTab,
+    val route: String,
+    val title: String,
+    val icon: ImageVector,
+) {
+    data object Games : BottomDestination(
+        tab = MainTab.GAMES,
+        route = "game",
+        title = "Игры",
+        icon = Icons.Filled.SportsEsports,
+    )
+
+    data object Shop : BottomDestination(
+        tab = MainTab.SHOP,
+        route = "shop",
+        title = "Магазин",
+        icon = Icons.Filled.Checkroom,
+    )
+
+    data object NotifyCreate : BottomDestination(
+        tab = MainTab.HOME,
+        route = "notifyCreate",
+        title = "Напоминания",
+        icon = Icons.Filled.Medication,
+    )
+
+    data object Doctor : BottomDestination(
+        tab = MainTab.DOCTOR,
+        route = "notify",
+        title = "Врачи",
+        icon = Icons.Filled.MedicalServices,
+    )
+}
+
+@Composable
+private fun BottomBarItem(
+    item: BottomDestination,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val tint by animateColorAsState(
+        targetValue = if (selected) PrimaryGreen else IconDark,
+        label = "bottom bar tint",
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (selected) 1.1f else 1f,
+        label = "bottom bar scale",
+    )
+
+    Column(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(5.dp))
+            .clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(
+            imageVector = item.icon,
+            contentDescription = item.title,
+            tint = tint,
+            modifier = Modifier.size(26.dp),
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = item.title,
+            fontSize = 11.sp,
+            color = tint,
+        )
     }
 }
 
@@ -525,7 +615,8 @@ private fun MainScreenPreview() {
                     todayDone = 0,
                     todayTotal = 0,
                     moodLabel = "Капибара в норме"
-                )
+                ),
+                selectedTab = MainTab.SHOP
             ),
             shopState = ShopUiState(),
             formState = ReminderFormUiState(),

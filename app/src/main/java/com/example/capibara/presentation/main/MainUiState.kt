@@ -9,13 +9,6 @@ data class MainUiState(
     val petStats: PetStats? = null,
     val reminders: List<Reminder> = emptyList(),
     val allReminders: List<Reminder> = emptyList(),
-    val selectedTab: Int = MainTab.HOME,
+    val selectedTab: MainTab,
     val isFormOpen: Boolean = false
 )
-
-object MainTab {
-    const val GAMES = 0
-    const val SHOP = 1
-    const val HOME = 2
-    const val DOCTOR = 3
-}
