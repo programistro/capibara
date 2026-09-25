@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -80,7 +82,9 @@ import java.util.Calendar
 import java.util.Locale
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.core.graphics.component1
+import com.example.capibara.domain.model.MoodLevel
 
 @Composable
 fun MainScreen(
@@ -110,6 +114,7 @@ fun MainScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(ScreenBackground)
+            .imePadding()
     ) {
         Box(
             modifier = Modifier
@@ -123,7 +128,7 @@ fun MainScreen(
                 modifier = Modifier.fillMaxSize()
             )
             Image(
-                painter = painterResource(id = R.drawable.pet),
+                painter = painterResource(id = MoodLevel.from(stats?.moodScore ?: 50).drawableRes()),
                 contentDescription = "Капибара",
                 modifier = Modifier
                     .size(220.dp)
@@ -209,6 +214,14 @@ val BottomNavItems = listOf(
     BottomDestination.NotifyCreate,
     BottomDestination.Doctor,
 )
+
+@DrawableRes
+fun MoodLevel.drawableRes(): Int = when (this) {
+    MoodLevel.CRYING -> R.drawable.pet_crying
+    MoodLevel.NORMAL -> R.drawable.pet_normal
+    MoodLevel.DEFAULT -> R.drawable.pet
+    MoodLevel.HAPPY -> R.drawable.pet_happy
+}
 
 @Composable
 private fun RequestNotificationPermission() {
@@ -417,29 +430,45 @@ private fun StubTab(title: String, text: String) {
 
 @Composable
 private fun CoinPill(coins: Int, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Star,
-                contentDescription = null,
-                tint = StarYellow,
-                modifier = Modifier.size(28.dp)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = coins.toString(),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-        }
+//    Card(
+//        modifier = modifier,
+//        shape = RoundedCornerShape(16.dp),
+//        colors = CardDefaults.cardColors(containerColor = Color.White)
+//    ) {
+//        Row(
+//            verticalAlignment = Alignment.CenterVertically,
+//            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+//        ) {
+//            Icon(
+//                imageVector = Icons.Filled.Star,
+//                contentDescription = null,
+//                tint = StarYellow,
+//                modifier = Modifier.size(28.dp)
+//            )
+//            Spacer(modifier = Modifier.width(4.dp))
+//            Text(
+//                text = coins.toString(),
+//                fontSize = 20.sp,
+//                fontWeight = FontWeight.Bold,
+//                color = Color.Black
+//            )
+//        }
+//    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+    ){
+        Icon(
+            painterResource(R.drawable.wallet),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = modifier
+        )
+        Text(
+            text = coins.toString(),
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+        )
     }
 }
 

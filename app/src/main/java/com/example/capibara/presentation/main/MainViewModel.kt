@@ -22,7 +22,8 @@ class MainViewModel @Inject constructor(
     getPetStats: GetPetStatsUseCase,
     private val getReminders: GetRemindersUseCase,
     private val getAllReminders: GetAllRemindersUseCase,
-    private val walletRepository: WalletRepository
+    private val walletRepository: WalletRepository,
+    private val moodRepository: WalletRepository
 ) : ViewModel() {
 
     private val today: String =
@@ -42,6 +43,11 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             walletRepository.observeCoins().collect { coins ->
                 _uiState.update { it.copy(petStats = it.petStats?.copy(coins = coins)) }
+            }
+        }
+        viewModelScope.launch {
+            moodRepository.observeCoins().collect { score ->
+                _uiState.update { it.copy(petStats = it.petStats?.copy(moodScore = score)) }
             }
         }
     }

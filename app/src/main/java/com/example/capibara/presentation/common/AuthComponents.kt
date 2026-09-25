@@ -133,12 +133,24 @@ fun UnderlineTextField(
             focusedContainerColor = Color.Transparent,
             unfocusedContainerColor = Color.Transparent,
             disabledContainerColor = Color.Transparent,
+
+            focusedTextColor = IconDark,
+            unfocusedTextColor = IconDark,
             disabledTextColor = Color.Black,
+
+            cursorColor = IconDark,
+
+            focusedPlaceholderColor = Color.Gray,
+            unfocusedPlaceholderColor = Color.Gray,
             disabledPlaceholderColor = Color.Gray,
+
+            focusedIndicatorColor = IconDark,
+            unfocusedIndicatorColor = Color.LightGray,
             disabledIndicatorColor = Color.LightGray,
-            disabledTrailingIconColor = Color.Gray,
-            focusedIndicatorColor = Color.Gray,
-            unfocusedIndicatorColor = Color.LightGray
+
+            focusedTrailingIconColor = IconDark,
+            unfocusedTrailingIconColor = Color.Gray,
+            disabledTrailingIconColor = Color.Gray
         ),
         modifier = modifier.fillMaxWidth()
     )

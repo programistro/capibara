@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,10 +37,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capibara.domain.model.Periodicity
 import com.example.capibara.presentation.common.UnderlineTextField
+import com.example.capibara.ui.theme.CapibaraTheme
 import com.example.capibara.ui.theme.IconDark
 import com.example.capibara.ui.theme.PrimaryGreen
 import java.util.Calendar
@@ -248,6 +252,7 @@ fun ReminderFormContent(
                 modifier = Modifier.weight(1f)
             )
         }
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
@@ -264,11 +269,83 @@ private fun FormButton(
             containerColor = PrimaryGreen,
             contentColor = IconDark
         ),
+        contentPadding = PaddingValues(horizontal = 8.dp),
         modifier = modifier.height(56.dp)
     ) {
         Text(
             text = text,
-            fontSize = 20.sp
+            fontSize = 20.sp,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Форма напоминания")
+@Composable
+private fun ReminderFormContentPreview() {
+    CapibaraTheme {
+        ReminderFormContent(
+            state = ReminderFormUiState(),
+            onTitleChange = {},
+            onDateChange = {},
+            onTimeChange = {},
+            onPeriodicityChange = {},
+            onNotifyEnabledChange = {},
+            onNotifyMinutesChange = {},
+            onSaveClick = {},
+            onClose = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Форма заполнена")
+@Composable
+private fun ReminderFormContentFilledPreview() {
+    CapibaraTheme {
+        ReminderFormContent(
+            state = ReminderFormUiState(
+                title = "Выпить таблетку",
+                date = "25.09.2026",
+                time = "11:17",
+                periodicity = Periodicity.EVERY_12_HOURS,
+                notifyEnabled = true,
+                notifyMinutes = "30"
+            ),
+            onTitleChange = {},
+            onDateChange = {},
+            onTimeChange = {},
+            onPeriodicityChange = {},
+            onNotifyEnabledChange = {},
+            onNotifyMinutesChange = {},
+            onSaveClick = {},
+            onClose = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Форма с ошибкой")
+@Composable
+private fun ReminderFormContentErrorPreview() {
+    CapibaraTheme {
+        ReminderFormContent(
+            state = ReminderFormUiState(
+                title = "",
+                date = "",
+                time = "",
+                notifyEnabled = false,
+                error = "Заполните название, дату и время"
+            ),
+            onTitleChange = {},
+            onDateChange = {},
+            onTimeChange = {},
+            onPeriodicityChange = {},
+            onNotifyEnabledChange = {},
+            onNotifyMinutesChange = {},
+            onSaveClick = {},
+            onClose = {}
         )
     }
 }

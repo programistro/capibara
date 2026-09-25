@@ -29,13 +29,28 @@ object ReminderNotificationHelper {
 
     fun showReminder(context: Context, reminderId: Long, title: String) {
         ensureChannel(context)
-        val intent = Intent(context, MainActivity::class.java)
+        val intent = Intent(context, MainActivity::class.java).apply {
+            putExtra("reminder_id", reminderId)
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
         val pendingIntent = PendingIntent.getActivity(
             context,
-            0,
+            reminderId.toInt(),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+
+        val acceptIntent = Intent(context, ReminderAlarmReceiver::class.java).apply {
+            action = "ACTION_REMINDER_ACCEPTED"
+            putExtra("reminder_id", reminderId)
+        }
+        val acceptPendingIntent = PendingIntent.getBroadcast(
+            context,
+            reminderId.toInt(), // Можно использовать тот же ID или другой уникальный
+            acceptIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_coin)
             .setContentTitle("Время принять лекарство")
@@ -43,6 +58,7 @@ object ReminderNotificationHelper {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
+            .addAction(0, "Принял", acceptPendingIntent)
             .build()
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(reminderId.toInt(), notification)

@@ -5,14 +5,18 @@ import android.content.SharedPreferences
 import androidx.room.Room
 import com.example.capibara.data.local.CapibaraDatabase
 import com.example.capibara.data.local.InventoryDao
+import com.example.capibara.data.local.MIGRATION_1_2
+import com.example.capibara.data.local.MoodDao
 import com.example.capibara.data.local.WalletDao
 import com.example.capibara.data.repository.AuthRepositoryImpl
 import com.example.capibara.data.repository.InventoryRepositoryImpl
+import com.example.capibara.data.repository.MoodRepositoryImpl
 import com.example.capibara.data.repository.PetRepositoryStub
 import com.example.capibara.data.repository.ReminderRepositoryStub
 import com.example.capibara.data.repository.WalletRepositoryImpl
 import com.example.capibara.domain.repository.AuthRepository
 import com.example.capibara.domain.repository.InventoryRepository
+import com.example.capibara.domain.repository.MoodRepository
 import com.example.capibara.domain.repository.PetRepository
 import com.example.capibara.domain.repository.ReminderRepository
 import com.example.capibara.domain.repository.WalletRepository
@@ -49,6 +53,16 @@ object AppModule {
     @Provides
     @Singleton
     @JvmStatic
+    fun provideMoodRepository(impl: MoodRepositoryImpl): MoodRepository = impl
+
+    @Provides
+    @Singleton
+    @JvmStatic
+    fun provideMoodMood(db: CapibaraDatabase): MoodDao = db.moodDao()
+
+    @Provides
+    @Singleton
+    @JvmStatic
     fun provideReminderRepository(impl: ReminderRepositoryStub): ReminderRepository = impl
 
     @Provides
@@ -72,7 +86,9 @@ object AppModule {
     fun provideDatabase(
         @ApplicationContext context: Context
     ): CapibaraDatabase =
-        Room.databaseBuilder(context, CapibaraDatabase::class.java, "capibara.db").build()
+        Room.databaseBuilder(context, CapibaraDatabase::class.java, "capibara.db")
+            .addMigrations(MIGRATION_1_2)
+            .build()
 
     @Provides
     @JvmStatic

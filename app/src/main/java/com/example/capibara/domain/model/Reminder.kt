@@ -6,7 +6,8 @@ data class Reminder(
     val date: String,
     val time: String,
     val periodicity: String = Periodicity.DAILY,
-    val notifyBeforeMinutes: Int = DEFAULT_NOTIFY_BEFORE_MINUTES
+    val notifyBeforeMinutes: Int = DEFAULT_NOTIFY_BEFORE_MINUTES,
+    val isTaken: Boolean = false
 )
 
 object Periodicity {

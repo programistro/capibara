@@ -34,34 +34,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <!-- Перенесено из com.example.pet (без LAUNCHER-фильтра, чтобы не было второй иконки) -->
-        <activity
-            android:name="com.example.pet.MainLauncherActivity"
-            android:exported="false" />
-        <activity
-            android:name="com.example.pet.AuthorisationActivity"
-            android:exported="false" />
-        <activity
-            android:name="com.example.pet.PetNameActivity"
-            android:exported="false" />
-        <activity
-            android:name="com.example.pet.RegistrationActivity"
-            android:exported="false" />
-        <activity
-            android:name="com.example.pet.TestNotificationActivity"
-            android:exported="false" />
-        <activity
-            android:name="com.example.pet.TetrisActivity"
-            android:configChanges="screenSize|orientation"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name="com.example.pet.MainActivity"
-            android:exported="false" />
-        <receiver
-            android:name="com.example.pet.AlarmReceiver"
-            android:enabled="true"
-            android:exported="true" />
         <receiver
             android:name=".notifications.ReminderAlarmReceiver"
             android:enabled="true"

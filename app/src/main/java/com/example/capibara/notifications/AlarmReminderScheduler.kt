@@ -17,7 +17,7 @@ import java.util.Locale
 import javax.inject.Inject
 
 class AlarmReminderScheduler @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param: ApplicationContext private val context: Context
 ) : ReminderScheduler {
 
     override fun schedule(reminder: Reminder) {
@@ -36,16 +36,19 @@ class AlarmReminderScheduler @Inject constructor(
     override fun nextTriggerMillis(reminder: Reminder): Long? =
         nextTriggerMillis(reminder, System.currentTimeMillis())
 
-    fun scheduleAt(reminder: Reminder, triggerAt: Long) {
+    fun scheduleAt(reminder: Reminder, triggerAt: Long) =
+        scheduleAt(reminder.id, reminder.title, reminder.periodicity, triggerAt)
+
+    fun scheduleAt(id: Long, title: String, periodicity: String, triggerAt: Long) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context, ReminderAlarmReceiver::class.java).apply {
-            putExtra(ReminderAlarmReceiver.EXTRA_ID, reminder.id)
-            putExtra(ReminderAlarmReceiver.EXTRA_TITLE, reminder.title)
-            putExtra(ReminderAlarmReceiver.EXTRA_PERIODICITY, reminder.periodicity)
+            putExtra(ReminderAlarmReceiver.EXTRA_ID, id)
+            putExtra(ReminderAlarmReceiver.EXTRA_TITLE, title)
+            putExtra(ReminderAlarmReceiver.EXTRA_PERIODICITY, periodicity)
         }
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            reminder.id.toInt(),
+            id.toInt(),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -74,7 +77,9 @@ class AlarmReminderScheduler @Inject constructor(
 
     override fun cancel(reminderId: Long) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, ReminderAlarmReceiver::class.java)
+        val intent = Intent(context, ReminderAlarmReceiver::class.java).apply {
+            putExtra(ReminderAlarmReceiver.EXTRA_ID, reminderId)
+        }
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             reminderId.toInt(),
@@ -86,22 +91,34 @@ class AlarmReminderScheduler @Inject constructor(
 
     companion object {
         private const val TAG = "ReminderAlarm"
-        private const val DATE_TIME_PATTERN = "d.M.yyyy HH:mm"
+        private const val DATE_TIME_PATTERN = "dd.MM.yyyy HH:mm"
 
         private fun format(millis: Long): String =
             SimpleDateFormat("dd.MM.yyyy, HH:mm", Locale.getDefault()).format(Date(millis))
 
         fun nextTriggerMillis(reminder: Reminder, now: Long = System.currentTimeMillis()): Long? {
-            val takesAt = try {
-                SimpleDateFormat(DATE_TIME_PATTERN, Locale.getDefault())
-                    .parse("${reminder.date} ${reminder.time}")?.time
-            } catch (_: Exception) {
-                null
-            } ?: return null
-            var trigger = takesAt - reminder.notifyBeforeMinutes * 60_000L
+            val takesAt = parseTakesAt(reminder) ?: return null
             val interval = Periodicity.intervalMillis(reminder.periodicity)
-            while (trigger <= now) trigger += interval
-            return trigger
+            val notifyBefore = reminder.notifyBeforeMinutes * 60_000L
+
+            // Время самого приёма: если оно уже прошло — переносим по периодичности.
+            var takeTime = takesAt
+            if (takeTime <= now) {
+                val missed = (now - takeTime) / interval + 1
+                takeTime += missed * interval
+            }
+
+            // Напоминание за N минут до приёма; если эта точка уже в прошлом —
+            // показываем сразу, а не откладываем на следующий период.
+            val trigger = takeTime - notifyBefore
+            return if (trigger <= now) now + 1_000L else trigger
+        }
+
+        fun parseTakesAt(reminder: Reminder): Long? = try {
+            SimpleDateFormat(DATE_TIME_PATTERN, Locale.getDefault())
+                .parse("${reminder.date} ${reminder.time}")?.time
+        } catch (_: Exception) {
+            null
         }
     }
 }

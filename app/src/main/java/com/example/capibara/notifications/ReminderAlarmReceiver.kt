@@ -1,11 +1,11 @@
 package com.example.capibara.notifications
 
+import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.example.capibara.domain.model.Periodicity
-import com.example.capibara.domain.model.Reminder
 
 class ReminderAlarmReceiver : BroadcastReceiver() {
 
@@ -15,17 +15,23 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         val periodicity = intent.getStringExtra(EXTRA_PERIODICITY)
             .orEmpty()
             .ifEmpty { Periodicity.DAILY }
+
         Log.d(TAG, "onReceive: сработал аларм id=$id title=$title")
-        if (id == 0L || title.isEmpty()) return
+
+        if(intent.action == "ACTION_REMINDER_ACCEPTED"){
+            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.cancel(id.toInt())
+        }
+
+        if (id == -1L || title.isEmpty()) return
 
         ReminderNotificationHelper.showReminder(context, id, title)
 
-        val scheduler = AlarmReminderScheduler(context.applicationContext)
-        val next = System.currentTimeMillis() + Periodicity.intervalMillis(periodicity)
-        scheduler.scheduleAt(
-            Reminder(id = id, title = title, date = "", time = "", periodicity = periodicity),
-            next
-        )
+        // Планируем следующий приём строго через один период от текущего срабатывания,
+        // иначе напоминание «уплывает» и перестаёт совпадать с выбранным временем.
+        val triggerAt = System.currentTimeMillis() + Periodicity.intervalMillis(periodicity)
+        AlarmReminderScheduler(context.applicationContext)
+            .scheduleAt(id, title, periodicity, triggerAt)
     }
 
     companion object {

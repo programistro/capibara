@@ -88,15 +88,19 @@ fun AppNavGraph(startDestination: String) {
                 onFormNotifyMinutesChange = formViewModel::onNotifyMinutesChange,
                 onFormSaveClick = {
                     formViewModel.onSaveClick { triggerAt ->
-                        if (triggerAt != null) {
-                            val text = SimpleDateFormat("dd.MM.yyyy, HH:mm", Locale.getDefault())
-                                .format(Date(triggerAt))
-                            Toast.makeText(
-                                context,
-                                "Уведомление придёт: $text",
-                                Toast.LENGTH_LONG
-                            ).show()
+                        val text = triggerAt?.let {
+                            SimpleDateFormat("dd.MM.yyyy, HH:mm", Locale.getDefault())
+                                .format(Date(it))
                         }
+                        Toast.makeText(
+                            context,
+                            if (text != null) {
+                                "Напоминание придёт: $text"
+                            } else {
+                                "Напоминание сохранено без уведомления"
+                            },
+                            Toast.LENGTH_LONG
+                        ).show()
                         mainViewModel.onCloseForm()
                     }
                 },
