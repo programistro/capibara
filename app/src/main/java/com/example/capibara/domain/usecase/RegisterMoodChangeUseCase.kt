@@ -8,7 +8,7 @@ class RegisterMoodChangeUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(taken: Boolean){
         if(taken){
-            moodRepository.increase(MOOD_PER_MISS)
+            moodRepository.increase(MOOD_PER_TAKE)
         } else {
             moodRepository.decrease(MOOD_PER_MISS)
         }

@@ -15,5 +15,12 @@ enum class MoodLevel {
             score < 75 -> MoodLevel.DEFAULT
             else -> MoodLevel.HAPPY
         }
+
+        fun fromText(score: Int): String = when{
+            score < 25 -> "Капибара грустит \uD83D\uDE14"
+            score < 50 -> "Капибара в норме \uD83D\uDE10"
+            score < 75 -> "Капибара счастлива \uD83D\uDE04"
+            else -> "Капибара в норме"
+        }
     }
 }

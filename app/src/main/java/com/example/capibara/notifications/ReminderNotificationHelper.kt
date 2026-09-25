@@ -40,14 +40,27 @@ object ReminderNotificationHelper {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val acceptIntent = Intent(context, ReminderAlarmReceiver::class.java).apply {
-            action = "ACTION_REMINDER_ACCEPTED"
+        val acceptIntent = Intent(context, ReminderActionReceiver::class.java).apply {
+            action = ReminderActionReceiver.ACTION_ACCEPTED
             putExtra("reminder_id", reminderId)
+            putExtra("action_taken", true)
         }
         val acceptPendingIntent = PendingIntent.getBroadcast(
             context,
-            reminderId.toInt(), // Можно использовать тот же ID или другой уникальный
+            (reminderId * 2).toInt(), // Можно использовать тот же ID или другой уникальный
             acceptIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val missIntent = Intent(context, ReminderActionReceiver::class.java).apply {
+            action = ReminderActionReceiver.ACTION_MISSED
+            putExtra("reminder_id", reminderId)
+            putExtra("action_taken", false)
+        }
+        val missPendingIntent = PendingIntent.getBroadcast(
+            context,
+            (reminderId * 2 + 1).toInt(), // Можно использовать тот же ID или другой уникальный
+            missIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -59,6 +72,7 @@ object ReminderNotificationHelper {
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .addAction(0, "Принял", acceptPendingIntent)
+            .addAction(0, "Пропустил", missPendingIntent)
             .build()
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(reminderId.toInt(), notification)

@@ -38,6 +38,10 @@
             android:name=".notifications.ReminderAlarmReceiver"
             android:enabled="true"
             android:exported="false" />
+        <receiver
+            android:name=".notifications.ReminderActionReceiver"
+            android:enabled="true"
+            android:exported="false" />
         <!-- NOTE: DailyCheckService из старого манифеста пропущен — исходника нет в декомпиле -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"

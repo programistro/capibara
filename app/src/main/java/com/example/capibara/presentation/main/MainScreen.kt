@@ -454,20 +454,27 @@ private fun CoinPill(coins: Int, modifier: Modifier = Modifier) {
 //            )
 //        }
 //    }
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-    ){
+    Box(
+        modifier = modifier
+            .padding(horizontal = 12.dp, vertical = 8.dp),      // Внутренние отступы плашки
+        contentAlignment = Alignment.CenterStart                // Выравниваем содержимое по левому краю
+    ) {
         Icon(
             painterResource(R.drawable.wallet),
             contentDescription = null,
             tint = Color.Unspecified,
-            modifier = modifier
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 4.dp)
         )
         Text(
             text = coins.toString(),
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 53.dp)
         )
     }
 }
@@ -500,7 +507,7 @@ private fun MoodCard(stats: PetStats, modifier: Modifier = Modifier) {
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "${stats.moodLabel} \uD83D\uDE10",
+                text = "${MoodLevel.fromText(stats.moodScore)}",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = MoodProgressYellow
