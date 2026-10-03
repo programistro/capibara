@@ -652,7 +652,7 @@ private fun MainScreenPreview() {
                     todayTotal = 0,
                     moodLabel = "Капибара в норме"
                 ),
-                selectedTab = MainTab.SHOP
+                selectedTab = MainTab.HOME
             ),
             shopState = ShopUiState(),
             formState = ReminderFormUiState(),

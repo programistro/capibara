@@ -1,7 +1,5 @@
 package com.example.capibara.presentation.main
 
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -25,6 +24,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -46,8 +46,11 @@ import com.example.capibara.presentation.common.UnderlineTextField
 import com.example.capibara.ui.theme.CapibaraTheme
 import com.example.capibara.ui.theme.IconDark
 import com.example.capibara.ui.theme.PrimaryGreen
+import dev.darkokoa.datetimewheelpicker.WheelDatePicker
+import dev.darkokoa.datetimewheelpicker.WheelTimePicker
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import java.util.Calendar
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,31 +67,8 @@ fun ReminderFormContent(
 ) {
     val context = LocalContext.current
     var periodicityExpanded by remember { mutableStateOf(false) }
-
-    val dateDialog = remember {
-        val calendar = Calendar.getInstance()
-        DatePickerDialog(
-            context,
-            { _, year, month, day ->
-                onDateChange(String.format(Locale.getDefault(), "%02d.%02d.%d", day, month + 1, year))
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-    }
-    val timeDialog = remember {
-        val calendar = Calendar.getInstance()
-        TimePickerDialog(
-            context,
-            { _, hour, minute ->
-                onTimeChange(String.format("%02d:%02d", hour, minute))
-            },
-            calendar.get(Calendar.HOUR_OF_DAY),
-            calendar.get(Calendar.MINUTE),
-            true
-        )
-    }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -134,7 +114,7 @@ fun ReminderFormContent(
                     modifier = Modifier.clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = { dateDialog.show() }
+                        onClick = { showDatePicker = true }
                     )
                 )
             }
@@ -154,7 +134,7 @@ fun ReminderFormContent(
                     modifier = Modifier.clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = { timeDialog.show() }
+                        onClick = { showTimePicker = true }
                     )
                 )
             }
@@ -254,7 +234,113 @@ fun ReminderFormContent(
         }
         Spacer(modifier = Modifier.height(24.dp))
     }
+
+    if (showDatePicker) {
+        WheelPickerDialog(
+            title = "Дата начала",
+            onDismiss = { showDatePicker = false }
+        ) { confirm ->
+            WheelDatePicker(
+                startDate = state.date.parseWheelDate(),
+                modifier = Modifier.fillMaxWidth(),
+                textColor = Color.Black,
+                onSnappedDate = { date ->
+                    confirm { onDateChange(date.toDisplayDate()) }
+                }
+            )
+        }
+    }
+
+    if (showTimePicker) {
+        WheelPickerDialog(
+            title = "Время приема",
+            onDismiss = { showTimePicker = false }
+        ) { confirm ->
+            WheelTimePicker(
+                startTime = state.time.parseWheelTime(),
+                modifier = Modifier.fillMaxWidth(),
+                textColor = Color.Black,
+                onSnappedTime = { time ->
+                    confirm { onTimeChange(time.toDisplayTime()) }
+                }
+            )
+        }
+    }
 }
+
+@Composable
+private fun WheelPickerDialog(
+    title: String,
+    onDismiss: () -> Unit,
+    picker: @Composable (confirm: (onConfirm: () -> Unit) -> Unit) -> Unit
+) {
+    // Выбранное значение хранится отдельно от state, чтобы «Отмена» ничего не меняла.
+    var pending: (() -> Unit)? by remember { mutableStateOf(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        title = {
+            Text(
+                text = title,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+        },
+        text = {
+            picker { onConfirm -> pending = onConfirm }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    pending?.invoke()
+                    onDismiss()
+                }
+            ) {
+                Text(text = "ОК", color = IconDark, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = "Отмена", color = Color.DarkGray)
+            }
+        }
+    )
+}
+
+val currentTime = Calendar.getInstance()
+/** `25.09.2026` → `LocalDate`; при неразборчивом значении — сегодняшний день. */
+private fun String.parseWheelDate(): LocalDate =
+    runCatching {
+        val (day, month, year) = split(".").map { it.trim().toInt() }
+        LocalDate(year, month, day)
+    }.getOrElse {
+        val year = currentTime.get(Calendar.YEAR)
+        val month = currentTime.get(Calendar.MONTH)
+        val today = currentTime.get(Calendar.DAY_OF_MONTH)
+        LocalDate(year, month, today)
+    }
+
+
+/** `23:53` → `LocalTime`; при неразборчивом значении — текущее время. */
+private fun String.parseWheelTime(): LocalTime =
+    runCatching {
+        val (hour, minute) = split(":").map { it.trim().toInt() }
+        LocalTime(hour, minute)
+    }.getOrElse {
+        val initialHour = currentTime.get(Calendar.HOUR_OF_DAY)
+        val initialMinute = currentTime.get(Calendar.MINUTE)
+        LocalTime(initialHour, initialMinute)
+    }
+
+/** `LocalDate` → `25.09.2026` — формат, который ждёт [SaveReminderUseCase]. */
+private fun LocalDate.toDisplayDate(): String =
+    "%02d.%02d.%d".format(day, month.ordinal + 1, year)
+
+/** `LocalTime` → `23:53`. */
+private fun LocalTime.toDisplayTime(): String =
+    "%02d:%02d".format(hour, minute)
 
 @Composable
 private fun FormButton(
