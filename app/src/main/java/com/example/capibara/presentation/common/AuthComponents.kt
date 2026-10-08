@@ -1,5 +1,6 @@
 package com.example.capibara.presentation.common
 
+import android.graphics.drawable.Icon
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
@@ -8,14 +9,23 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -65,13 +75,21 @@ fun PinTextField(
     onValueChange: (String) -> Unit,
     placeholder: String
 ) {
+    var isPasswordShow by remember { mutableStateOf(false) }
     TextField(
         value = value,
         onValueChange = onValueChange,
         placeholder = { Text(text = placeholder, color = Color.Gray) },
         singleLine = true,
-        visualTransformation = PasswordVisualTransformation(),
-        shape = RectangleShape,
+        visualTransformation = if(isPasswordShow) PasswordVisualTransformation() else VisualTransformation.None,
+        trailingIcon = {
+            val icon = if(isPasswordShow) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+
+            IconButton(onClick = {isPasswordShow = !isPasswordShow}) {
+                Icon(imageVector = icon, contentDescription = "description", tint = Color.Gray)
+            }
+        },
+        shape = RoundedCornerShape(15.dp),
         colors = TextFieldDefaults.colors(
             focusedContainerColor = InputGray,
             unfocusedContainerColor = InputGray,
@@ -103,7 +121,8 @@ fun GreenButton(
             text = text,
             fontSize = 22.sp,
             fontWeight = FontWeight.Medium,
-            color = IconDark
+//            color = IconDark
+            color = Color.White
         )
     }
 }

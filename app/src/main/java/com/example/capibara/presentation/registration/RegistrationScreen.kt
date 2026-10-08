@@ -48,7 +48,7 @@ fun RegistrationScreen(
                 Text(
                     text = "Пин-код",
                     fontSize = 24.sp,
-                    color = Color.Black
+                    color = Color(0xFF838E98)
                 )
                 PinTextField(
                     value = state.pin,
@@ -58,7 +58,7 @@ fun RegistrationScreen(
                 Text(
                     text = "Повторите пин-код",
                     fontSize = 24.sp,
-                    color = Color.Black
+                    color = Color(0xFF838E98)
                 )
                 PinTextField(
                     value = state.repeatPin,
@@ -76,7 +76,7 @@ fun RegistrationScreen(
                 }
                 GreenButton(
                     text = "Зарегистрироваться",
-                    onClick = onRegisterClick
+                    onClick = onRegisterClick,
                 )
             }
         }
