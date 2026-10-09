@@ -6,6 +6,7 @@ import androidx.room.Room
 import com.example.capibara.data.local.CapibaraDatabase
 import com.example.capibara.data.local.InventoryDao
 import com.example.capibara.data.local.MIGRATION_1_2
+import com.example.capibara.data.local.MIGRATION_2_3
 import com.example.capibara.data.local.MoodDao
 import com.example.capibara.data.local.WalletDao
 import com.example.capibara.data.repository.AuthRepositoryImpl
@@ -88,6 +89,7 @@ object AppModule {
     ): CapibaraDatabase =
         Room.databaseBuilder(context, CapibaraDatabase::class.java, "capibara.db")
             .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_2_3)
             .build()
 
     @Provides

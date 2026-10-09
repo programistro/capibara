@@ -31,6 +31,12 @@ class ShopViewModel @Inject constructor(
                 _uiState.update { it.copy(purchasedIds = ids) }
             }
         }
+
+        viewModelScope.launch {
+            inventoryRepository.observeSelectedId().collect { ids ->
+                _uiState.update { it.copy(selectedId = ids) }
+            }
+        }
     }
     fun onBuyClick(item: ShopItem) {
         viewModelScope.launch {
@@ -43,6 +49,10 @@ class ShopViewModel @Inject constructor(
                 BuyResult.AlreadyOwned -> _uiState.update { it.copy(error = "Уже куплено") }
             }
         }
+    }
+
+    fun selectItem(item: ShopItem){
+        viewModelScope.launch { inventoryRepository.select(item.id) }
     }
 
     fun onClearError(){

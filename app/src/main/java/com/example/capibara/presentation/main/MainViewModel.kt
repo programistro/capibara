@@ -2,6 +2,7 @@ package com.example.capibara.presentation.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.capibara.domain.repository.InventoryRepository
 import com.example.capibara.domain.repository.MoodRepository
 import com.example.capibara.domain.repository.WalletRepository
 import com.example.capibara.domain.usecase.GetAllRemindersUseCase
@@ -24,7 +25,8 @@ class MainViewModel @Inject constructor(
     private val getReminders: GetRemindersUseCase,
     private val getAllReminders: GetAllRemindersUseCase,
     private val walletRepository: WalletRepository,
-    private val moodRepository: MoodRepository
+    private val moodRepository: MoodRepository,
+    private val inventoryRepository: InventoryRepository
 ) : ViewModel() {
 
     private val today: String =
@@ -51,9 +53,13 @@ class MainViewModel @Inject constructor(
                 _uiState.update { it.copy(petStats = it.petStats?.copy(moodScore = score)) }
             }
         }
+
+        viewModelScope.launch {
+            inventoryRepository.observeSelectedId().collect { item ->
+                _uiState.update { it.copy(selectedItemId = item) }
+            }
+        }
     }
-
-
 
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 

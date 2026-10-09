@@ -20,4 +20,12 @@ class InventoryRepositoryImpl @Inject constructor(
     override suspend fun markOwned(itemId: Int) {
         dao.insert(OwnedItemEntity(itemId = itemId))
     }
+
+    override fun observeSelectedId(): Flow<Int?> {
+        return dao.observeSelectedId()
+    }
+
+    override suspend fun select(itemId: Int) {
+        dao.select(itemId)
+    }
 }

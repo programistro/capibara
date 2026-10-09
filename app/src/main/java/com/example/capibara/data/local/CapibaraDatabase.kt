@@ -7,7 +7,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [WalletEntity::class, OwnedItemEntity::class, MoodEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class CapibaraDatabase : RoomDatabase() {

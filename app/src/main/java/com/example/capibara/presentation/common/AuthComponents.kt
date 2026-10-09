@@ -94,8 +94,8 @@ fun PinTextField(
             focusedContainerColor = InputGray,
             unfocusedContainerColor = InputGray,
             disabledContainerColor = InputGray,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
+            focusedIndicatorColor = Color.Gray,
+            unfocusedIndicatorColor = Color.Gray
         ),
         modifier = Modifier.fillMaxWidth()
     )

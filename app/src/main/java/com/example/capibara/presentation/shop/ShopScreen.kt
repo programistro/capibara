@@ -42,6 +42,7 @@ fun ShopScreen(
     state: ShopUiState,
     mood: MoodLevel,
     onBuyClick: (ShopItem) -> Unit,
+    onSelectClick: (ShopItem) -> Unit,
     onBackClick: () -> Unit,
     onClearError:() -> Unit
 ) {
@@ -86,8 +87,10 @@ fun ShopScreen(
                 ShopItemCard(
                     item = item,
                     purchased = item.id in state.purchasedIds,
+                    selectedItem = state.selectedId,
                     mood = mood,
-                    onBuyClick = { onBuyClick(item) }
+                    onBuyClick = { onBuyClick(item) },
+                    onSelectClick = { onSelectClick(item) }
                 )
             }
         }
@@ -104,8 +107,11 @@ private fun ShopItemCard(
     item: ShopItem,
     purchased: Boolean,
     mood: MoodLevel,
-    onBuyClick: () -> Unit
+    selectedItem: Int?,
+    onBuyClick: () -> Unit,
+    onSelectClick:() -> Unit
 ) {
+    val isSelected = item.id == selectedItem
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
@@ -137,8 +143,8 @@ private fun ShopItemCard(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Button(
-            onClick = onBuyClick,
-            enabled = !purchased,
+            onClick = if (purchased) onSelectClick else onBuyClick,
+            enabled = !isSelected,
             shape = RoundedCornerShape(24.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = PrimaryGreen,
@@ -151,7 +157,11 @@ private fun ShopItemCard(
                 .height(48.dp)
         ) {
             Text(
-                text = if (purchased) "Куплено" else "Купить",
+                text = when {
+                    !purchased -> "Купить"
+                    isSelected -> "Надето"
+                    else -> "Надеть"
+                },
                 fontSize = 18.sp
             )
         }
@@ -167,7 +177,7 @@ private fun MoodLevel.label(): String = when (this) {
     MoodLevel.HAPPY -> "счастлива"
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Магазин: куплено и надето")
 @Composable
 private fun ShopScreenPreview() {
     CapibaraTheme {
@@ -175,11 +185,35 @@ private fun ShopScreenPreview() {
             state = ShopUiState(
                 items = listOf(
                     ShopItem(1, "Шляпа", ShopSlot.HEAD, 100),
-                    ShopItem(2, "Очки", ShopSlot.FACE, 150)
-                )
+                    ShopItem(2, "Очки", ShopSlot.FACE, 150),
+                    ShopItem(3, "Пиджак", ShopSlot.BODY, 80)
+                ),
+                purchasedIds = setOf(1, 2),
+                selectedId = 1
             ),
             mood = MoodLevel.HAPPY,
             onBuyClick = {},
+            onSelectClick = {},
+            onBackClick = {},
+            onClearError = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Магазин: ничего не куплено")
+@Composable
+private fun ShopScreenEmptyPreview() {
+    CapibaraTheme {
+        ShopScreen(
+            state = ShopUiState(
+                items = listOf(
+                    ShopItem(4, "Шарф", ShopSlot.ACCESSORY, 120),
+                    ShopItem(6, "Кепка", ShopSlot.HEAD, 90)
+                )
+            ),
+            mood = MoodLevel.CRYING,
+            onBuyClick = {},
+            onSelectClick = {},
             onBackClick = {},
             onClearError = {}
         )

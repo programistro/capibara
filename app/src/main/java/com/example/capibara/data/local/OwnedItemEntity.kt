@@ -6,5 +6,6 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "owned_items")
 data class OwnedItemEntity(
     @PrimaryKey val itemId: Int,
-    val purchasedAt: Long = System.currentTimeMillis()
+    val purchasedAt: Long = System.currentTimeMillis(),
+    val selectedItem: Boolean = false
 )

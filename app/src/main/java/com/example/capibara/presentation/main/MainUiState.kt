@@ -10,5 +10,6 @@ data class MainUiState(
     val reminders: List<Reminder> = emptyList(),
     val allReminders: List<Reminder> = emptyList(),
     val selectedTab: MainTab,
-    val isFormOpen: Boolean = false
+    val isFormOpen: Boolean = false,
+    val selectedItemId: Int? = null
 )

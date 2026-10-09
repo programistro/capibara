@@ -97,6 +97,7 @@ fun MainScreen(
     onTodayClick: () -> Unit,
     onDateSelected: (String) -> Unit,
     onBuyClick: (ShopItem) -> Unit,
+    onSelectClick: (ShopItem) -> Unit,
     onShopBackClick: () -> Unit,
     onClearError: () -> Unit,
     onFormTitleChange: (String) -> Unit,
@@ -129,7 +130,12 @@ fun MainScreen(
                 modifier = Modifier.fillMaxSize()
             )
             Image(
-                painter = painterResource(id = MoodLevel.from(stats?.moodScore ?: 50).drawableRes()),
+                painter = painterResource(
+                    id = PetSprite.of(
+                        itemId = state.selectedItemId,
+                        mood = MoodLevel.from(stats?.moodScore ?: 50)
+                    )
+                ),
                 contentDescription = "Капибара",
                 modifier = Modifier
                     .size(220.dp)
@@ -177,6 +183,7 @@ fun MainScreen(
                     state = shopState,
                     mood = MoodLevel.from(stats?.moodScore ?: 50),
                     onBuyClick = onBuyClick,
+                    onSelectClick = onSelectClick,
                     onBackClick = onShopBackClick,
                     onClearError = onClearError
                 )
@@ -658,6 +665,7 @@ private fun MainScreenPreview() {
             onTodayClick = {},
             onDateSelected = {},
             onBuyClick = {},
+            onSelectClick = {},
             onShopBackClick = {},
             onFormTitleChange = {},
             onFormDateChange = {},
