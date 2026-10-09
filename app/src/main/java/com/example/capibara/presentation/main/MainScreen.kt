@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.capibara.R
+import com.example.capibara.domain.model.PetSprite
 import com.example.capibara.domain.model.PetStats
 import com.example.capibara.domain.model.Reminder
 import com.example.capibara.domain.model.ShopItem
@@ -174,6 +175,7 @@ fun MainScreen(
                 )
                 state.selectedTab == MainTab.SHOP -> ShopScreen(
                     state = shopState,
+                    mood = MoodLevel.from(stats?.moodScore ?: 50),
                     onBuyClick = onBuyClick,
                     onBackClick = onShopBackClick,
                     onClearError = onClearError
@@ -216,12 +218,7 @@ val BottomNavItems = listOf(
 )
 
 @DrawableRes
-fun MoodLevel.drawableRes(): Int = when (this) {
-    MoodLevel.CRYING -> R.drawable.pet_crying
-    MoodLevel.NORMAL -> R.drawable.pet_normal
-    MoodLevel.DEFAULT -> R.drawable.pet
-    MoodLevel.HAPPY -> R.drawable.pet_happy
-}
+fun MoodLevel.drawableRes(): Int = PetSprite.base(this)
 
 @Composable
 private fun RequestNotificationPermission() {
@@ -322,7 +319,7 @@ private fun HomeTab(
                 shape = RoundedCornerShape(20.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = PrimaryGreen,
-                    contentColor = Color.Black
+                    contentColor = Color.White
                 )
             ) {
                 Text(text = "Сегодня", fontSize = 16.sp)

@@ -29,6 +29,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capibara.R
+import com.example.capibara.domain.model.MoodLevel
+import com.example.capibara.domain.model.PetSprite
 import com.example.capibara.domain.model.ShopItem
 import com.example.capibara.domain.model.ShopSlot
 import com.example.capibara.presentation.common.GreenButton
@@ -38,6 +40,7 @@ import com.example.capibara.ui.theme.PrimaryGreen
 @Composable
 fun ShopScreen(
     state: ShopUiState,
+    mood: MoodLevel,
     onBuyClick: (ShopItem) -> Unit,
     onBackClick: () -> Unit,
     onClearError:() -> Unit
@@ -64,6 +67,14 @@ fun ShopScreen(
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "На капибаре: ${mood.label()}",
+            fontSize = 14.sp,
+            color = Color.Gray,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(modifier = Modifier.height(16.dp))
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
@@ -75,6 +86,7 @@ fun ShopScreen(
                 ShopItemCard(
                     item = item,
                     purchased = item.id in state.purchasedIds,
+                    mood = mood,
                     onBuyClick = { onBuyClick(item) }
                 )
             }
@@ -91,6 +103,7 @@ fun ShopScreen(
 private fun ShopItemCard(
     item: ShopItem,
     purchased: Boolean,
+    mood: MoodLevel,
     onBuyClick: () -> Unit
 ) {
     Column(
@@ -98,7 +111,7 @@ private fun ShopItemCard(
         modifier = Modifier.fillMaxWidth()
     ) {
         Image(
-            painter = painterResource(id = shopImage(item.id)),
+            painter = painterResource(id = shopImage(item.id, mood)),
             contentDescription = item.name,
             modifier = Modifier.size(110.dp)
         )
@@ -145,18 +158,13 @@ private fun ShopItemCard(
     }
 }
 
-private fun shopImage(itemId: Int): Int = when (itemId) {
-    1 -> R.drawable.hat_1
-    2 -> R.drawable.glasses_1
-    3 -> R.drawable.jacket
-    4 -> R.drawable.coat
-    5 -> R.drawable.bow
-    6 -> R.drawable.cap
-    7 -> R.drawable.glasses_2
-    8 -> R.drawable.headband
-    9 -> R.drawable.scarf
-    10 -> R.drawable.hat_2
-    else -> R.drawable.pet
+private fun shopImage(itemId: Int, mood: MoodLevel): Int = PetSprite.of(itemId, mood)
+
+/** Человекочитаемое название настроения для подписи над витриной. */
+private fun MoodLevel.label(): String = when (this) {
+    MoodLevel.CRYING -> "грустит"
+    MoodLevel.NORMAL, MoodLevel.DEFAULT -> "в норме"
+    MoodLevel.HAPPY -> "счастлива"
 }
 
 @Preview(showBackground = true)
@@ -170,6 +178,7 @@ private fun ShopScreenPreview() {
                     ShopItem(2, "Очки", ShopSlot.FACE, 150)
                 )
             ),
+            mood = MoodLevel.HAPPY,
             onBuyClick = {},
             onBackClick = {},
             onClearError = {}
