@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.DatePickerDialog
 import android.content.pm.PackageManager
 import android.os.Build
+import android.widget.Space
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
@@ -284,18 +285,18 @@ private fun HomeTab(
                 color = Color.Black,
                 modifier = Modifier.weight(1f)
             )
-            IconButton(
-                onClick = onAddClick,
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(PrimaryGreen, CircleShape)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = "Добавить",
-                    tint = IconDark
-                )
-            }
+//            IconButton(
+//                onClick = onAddClick,
+//                modifier = Modifier
+//                    .size(40.dp)
+//                    .background(PrimaryGreen, CircleShape)
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Filled.Add,
+//                    contentDescription = "Добавить",
+//                    tint = IconDark
+//                )
+//            }
         }
         Spacer(modifier = Modifier.height(16.dp))
         Row(
@@ -334,13 +335,46 @@ private fun HomeTab(
         }
         Spacer(modifier = Modifier.height(24.dp))
         if (state.reminders.isEmpty()) {
+            Icon(
+                painterResource(R.drawable.ic_calendar),
+                contentDescription = "calendar",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .size(100.dp),
+                tint = PrimaryGreen
+            )
+//            Icon(
+//                imageVector = Icons.Filled.Star,
+//                contentDescription = null,
+//                tint = StarYellow,
+//                modifier = Modifier.size(28.dp)
+//            )
             Text(
-                text = "На $dateLabel лекарств нет",
-                fontSize = 18.sp,
+                text = "На сегодня лекарств нет",
+                fontSize = 22.sp,
                 color = Color.Black,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
+            Text(
+                text = "Добавить напоминание, чтобы\n капибара не грустила",
+                fontSize = 14.sp,
+                color = Color.Gray,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = onAddClick,
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PrimaryGreen,
+                    contentColor = Color.White
+                )
+            ) {
+                Text(text = "Добавить напоминание", fontSize = 16.sp)
+            }
         } else {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp)

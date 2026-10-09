@@ -12,7 +12,8 @@ val Pink40 = Color(0xFF7D5260)
 
 // Палитра с дизайн-скриншотов
 val ScreenBackground = Color(0xFFD9E7D4)
-val PrimaryGreen = Color(0xFF97BD90)
+val GreenBackground = Color(0xFFE2EFE3)
+val PrimaryGreen = Color(0xFF9FC6A6)
 val InputGray = Color(0xFFD9D9D9)
 val MoodCardYellow = Color(0xFFFFF4C9)
 val StarYellow = Color(0xFFFFC93C)

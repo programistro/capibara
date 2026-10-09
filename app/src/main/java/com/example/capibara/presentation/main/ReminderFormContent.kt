@@ -1,5 +1,6 @@
 package com.example.capibara.presentation.main
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -10,7 +11,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,6 +25,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -34,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -41,10 +47,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.capibara.R
 import com.example.capibara.domain.model.Periodicity
 import com.example.capibara.presentation.common.UnderlineTextField
 import com.example.capibara.ui.theme.CapibaraTheme
+import com.example.capibara.ui.theme.GreenBackground
 import com.example.capibara.ui.theme.IconDark
+import com.example.capibara.ui.theme.InputGray
 import com.example.capibara.ui.theme.PrimaryGreen
 import dev.darkokoa.datetimewheelpicker.WheelDatePicker
 import dev.darkokoa.datetimewheelpicker.WheelTimePicker
@@ -76,14 +85,26 @@ fun ReminderFormContent(
             .verticalScroll(rememberScrollState())
             .padding(20.dp)
     ) {
-        Text(
-            text = "Напоминание",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
+        Row(modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                painterResource(R.drawable.ic_notify),
+                contentDescription = "calendar",
+                modifier = Modifier
+                    .size(60.dp)
+                    .background(color = GreenBackground, shape = CircleShape)
+                    .padding(4.dp),
+                tint = PrimaryGreen
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = "Напоминание",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                textAlign = TextAlign.Center,
+            )
+       }
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "Название",
@@ -99,12 +120,25 @@ fun ReminderFormContent(
         Spacer(modifier = Modifier.height(16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Дата начала",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
+                Row(modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically){
+                    Icon(
+                        painterResource(R.drawable.ic_calendar),
+                        contentDescription = "calendar",
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(color = GreenBackground, shape = CircleShape)
+                            .padding(4.dp),
+                        tint = PrimaryGreen
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = "Дата начала",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                }
                 UnderlineTextField(
                     value = state.date,
                     onValueChange = {},
@@ -119,12 +153,25 @@ fun ReminderFormContent(
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Время приема",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
+                Row(modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically){
+                    Icon(
+                        painterResource(R.drawable.ic_clock),
+                        contentDescription = "calendar",
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(color = GreenBackground, shape = CircleShape)
+                            .padding(4.dp),
+                        tint = PrimaryGreen
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = "Время приема",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                }
                 UnderlineTextField(
                     value = state.time,
                     onValueChange = {},
@@ -140,12 +187,25 @@ fun ReminderFormContent(
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Периодичность",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
+        Row(modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically){
+            Icon(
+                painterResource(R.drawable.ic_repeat),
+                contentDescription = "calendar",
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(color = GreenBackground, shape = CircleShape)
+                    .padding(4.dp),
+                tint = PrimaryGreen
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = "Периодичность",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+        }
         ExposedDropdownMenuBox(
             expanded = periodicityExpanded,
             onExpandedChange = { periodicityExpanded = it }
