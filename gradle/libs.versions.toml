@@ -6,6 +6,7 @@ junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
 kotlinxDatetime = "0.8.0"
+ktorVersion = "3.0.1"
 lifecycleRuntimeKtx = "2.6.1"
 activityCompose = "1.8.0"
 activity = "1.8.0"
@@ -25,6 +26,7 @@ composeBom = "2026.02.01"
 googleServices = "4.4.3"
 firebaseBom = "34.4.0"
 foundation = "1.12.1"
+playServicesCloudMessaging = "17.4.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -67,6 +69,12 @@ firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.r
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktorVersion" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorVersion" }
+ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktorVersion" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktorVersion" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktorVersion" }
+play-services-cloud-messaging = { group = "com.google.android.gms", name = "play-services-cloud-messaging", version.ref = "playServicesCloudMessaging" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

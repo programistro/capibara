@@ -37,7 +37,7 @@ class MainViewModel @Inject constructor(
             date = today,
             petStats = getPetStats(),
             reminders = getReminders(today),
-            allReminders = getAllReminders(),
+            news = emptyList(),
             selectedTab = MainTab.SHOP
         )
     )
@@ -59,6 +59,10 @@ class MainViewModel @Inject constructor(
                 _uiState.update { it.copy(selectedItemId = item) }
             }
         }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(news = getAllReminders()) }
+        }
     }
 
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
@@ -74,7 +78,9 @@ class MainViewModel @Inject constructor(
     fun onCloseForm() {
         _uiState.update { it.copy(isFormOpen = false) }
         refreshReminders(_uiState.value.date)
-        refreshAllReminders()
+        viewModelScope.launch {
+            refreshAllNews()
+        }
     }
 
     fun onDateSelected(date: String) {
@@ -91,7 +97,7 @@ class MainViewModel @Inject constructor(
         _uiState.update { it.copy(reminders = getReminders(date)) }
     }
 
-    private fun refreshAllReminders() {
-        _uiState.update { it.copy(allReminders = getAllReminders()) }
+    private suspend fun refreshAllNews() {
+        _uiState.update { it.copy(news = getAllReminders()) }
     }
 }

@@ -1,9 +1,26 @@
+import com.google.devtools.ksp.gradle.isolatedClassLoaderCache
+import java.util.Properties
+
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+
+    if (file.exists()) {
+        file.inputStream().use { input ->
+            load(input)
+        }
+    }
+}
+
+val gnewsApiKey = localProperties.getProperty("GNEWS_API_KEY")
+    ?: error("GNEWS_API_KEY is missing in local.properties")
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.google.services)
+    kotlin("plugin.serialization") version "2.0.21"
 }
 
 android {
@@ -26,6 +43,12 @@ android {
                 arguments["room.schemaLocation"] = "$projectDir/schemas"
             }
         }
+
+        buildConfigField(
+            "String",
+            "GNEWS_API_KEY",
+            "\"$gnewsApiKey\""
+        )
     }
 
     buildTypes {
@@ -41,6 +64,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -69,6 +93,7 @@ dependencies {
     // Room (локальная БД)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.play.services.cloud.messaging)
     ksp(libs.androidx.room.compiler)
     // Hilt (DI)
     implementation(libs.hilt.android)
@@ -86,4 +111,10 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.datetime.wheel.picker)
     implementation(libs.kotlinx.datetime)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.client.logging)
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }

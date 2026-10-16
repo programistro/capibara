@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.DatePickerDialog
 import android.content.pm.PackageManager
 import android.os.Build
-import android.widget.Space
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
@@ -23,30 +22,25 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Checkroom
-import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Medication
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.SportsEsports
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -69,7 +63,6 @@ import androidx.core.content.ContextCompat
 import com.example.capibara.R
 import com.example.capibara.domain.model.PetSprite
 import com.example.capibara.domain.model.PetStats
-import com.example.capibara.domain.model.Reminder
 import com.example.capibara.domain.model.ShopItem
 import com.example.capibara.presentation.shop.ShopScreen
 import com.example.capibara.presentation.shop.ShopUiState
@@ -79,14 +72,15 @@ import com.example.capibara.ui.theme.MoodCardYellow
 import com.example.capibara.ui.theme.MoodProgressYellow
 import com.example.capibara.ui.theme.PrimaryGreen
 import com.example.capibara.ui.theme.ScreenBackground
-import com.example.capibara.ui.theme.StarYellow
 import java.util.Calendar
 import java.util.Locale
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.pointer.motionEventSpy
-import androidx.core.graphics.component1
+import androidx.compose.ui.text.style.TextOverflow
+import coil.compose.AsyncImage
+import com.example.capibara.domain.model.Article
 import com.example.capibara.domain.model.MoodLevel
+import com.example.capibara.domain.model.NewsResponse
 
 @Composable
 fun MainScreen(
@@ -192,8 +186,8 @@ fun MainScreen(
                     title = "Игры",
                     text = "Тетрис скоро появится"
                 )
-                state.selectedTab == MainTab.DOCTOR -> DoctorTab(
-                    reminders = state.allReminders
+                state.selectedTab == MainTab.NEWS -> NewsTab(
+                    news = state.news
                 )
                 else -> HomeTab(
                     state = state,
@@ -215,14 +209,14 @@ enum class MainTab {
     HOME,
     SHOP,
     GAMES,
-    DOCTOR
+    NEWS
 }
 
 val BottomNavItems = listOf(
     BottomDestination.Games,
     BottomDestination.Shop,
     BottomDestination.NotifyCreate,
-    BottomDestination.Doctor,
+    BottomDestination.News,
 )
 
 @DrawableRes
@@ -392,14 +386,14 @@ private fun HomeTab(
 }
 
 @Composable
-private fun DoctorTab(reminders: List<Reminder>) {
+private fun NewsTab(news: List<Article>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(20.dp)
     ) {
         Text(
-            text = "Мои напоминания",
+            text = "Новости на сегодня",
             fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
@@ -407,9 +401,9 @@ private fun DoctorTab(reminders: List<Reminder>) {
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
-        if (reminders.isEmpty()) {
+        if (news.isEmpty()) {
             Text(
-                text = "Пока нет ни одного напоминания",
+                text = "Не удалось загрузить новости",
                 fontSize = 18.sp,
                 color = Color.Black,
                 textAlign = TextAlign.Center,
@@ -419,21 +413,87 @@ private fun DoctorTab(reminders: List<Reminder>) {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(reminders) { reminder ->
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = reminder.title,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                        Text(
-                            text = "${reminder.date} в ${reminder.time} • ${reminder.periodicity}",
-                            fontSize = 14.sp,
-                            color = Color.DarkGray
-                        )
-                    }
+                items(news) { reminder ->
+                    NewsCard(reminder, onClick = {})
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NewsCard( article: Article,
+                      onClick: () -> Unit,
+                      modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp, horizontal = 12.dp)
+    ) {
+        Column {
+            // 1. Картинка статьи
+            if (article.image.isNotEmpty()) {
+                AsyncImage(
+                    model = article.image,
+                    contentDescription = "Обложка статьи",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                )
+            }
+
+            // Контент внутри карточки
+            Column(modifier = Modifier.padding(12.dp)) {
+
+                // 2. Источник и Страна
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = article.source.name,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = article.source.country.uppercase(),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 3. Заголовок
+                Text(
+                    text = article.title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        lineHeight = 22.sp
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // 4. Описание (Description)
+                Text(
+                    text = article.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
@@ -626,11 +686,11 @@ sealed class BottomDestination(
         icon = Icons.Filled.Medication,
     )
 
-    data object Doctor : BottomDestination(
-        tab = MainTab.DOCTOR,
+    data object News : BottomDestination(
+        tab = MainTab.NEWS,
         route = "notify",
-        title = "Врачи",
-        icon = Icons.Filled.MedicalServices,
+        title = "Новости",
+        icon = Icons.Filled.Newspaper,
     )
 }
 
@@ -690,7 +750,8 @@ private fun MainScreenPreview() {
                     todayTotal = 0,
                     moodLabel = "Капибара в норме"
                 ),
-                selectedTab = MainTab.HOME
+                news = NewsResponse.fromJson(),
+                selectedTab = MainTab.NEWS
             ),
             shopState = ShopUiState(),
             formState = ReminderFormUiState(),

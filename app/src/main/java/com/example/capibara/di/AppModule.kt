@@ -12,12 +12,14 @@ import com.example.capibara.data.local.WalletDao
 import com.example.capibara.data.repository.AuthRepositoryImpl
 import com.example.capibara.data.repository.InventoryRepositoryImpl
 import com.example.capibara.data.repository.MoodRepositoryImpl
+import com.example.capibara.data.repository.NewsRepositoryImpl
 import com.example.capibara.data.repository.PetRepositoryStub
 import com.example.capibara.data.repository.ReminderRepositoryStub
 import com.example.capibara.data.repository.WalletRepositoryImpl
 import com.example.capibara.domain.repository.AuthRepository
 import com.example.capibara.domain.repository.InventoryRepository
 import com.example.capibara.domain.repository.MoodRepository
+import com.example.capibara.domain.repository.NewsRepository
 import com.example.capibara.domain.repository.PetRepository
 import com.example.capibara.domain.repository.ReminderRepository
 import com.example.capibara.domain.repository.WalletRepository
@@ -80,6 +82,11 @@ object AppModule {
     @Singleton
     @JvmStatic
     fun provideInventoryRepository(impl: InventoryRepositoryImpl): InventoryRepository = impl
+
+    @Provides
+    @Singleton
+    @JvmStatic
+    fun provideNewsRepository(impl: NewsRepositoryImpl): NewsRepository = impl
 
     @Provides
     @Singleton
