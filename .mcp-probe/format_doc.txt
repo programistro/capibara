@@ -1,0 +1,403 @@
+# Free Format Specification
+
+Free format is NULL-free, NaN-free and Infinity-free - if any of these values are in JSON - it's broken.
+
+* **GUID** — 22 chars base64 string for ID's. Examples: `R1o2w3_4D5i6n7g8_000AA`, `N1a2m3-4C5o6n7t8_910AA`, `reY4TrsLHUeFk-E0CtyS5A`
+* **Color** — ARGB hex string without `#`, supports minified values. Examples: `F` = `FFFFFF`, `34` = `343434`, `F33` = `FF3333`, `FFAA41`, `9900FF47`.
+* **Point** — array of 2 floats [x,y]. Example: `[3,7]`.
+* **Size** — array of 2 floats [width,height]. Example: `[3,7]`.
+* **Rect** — array of 4 floats [left,top,width,height]. Example: `[0,0,100,100]`.
+* **Thickness** — array of 1-4 floats [left,top,right,bottom]. Examples: `[8,4,8,5]`,`[8,4]`,`[4]`.
+* **Matrix** — affine 2x3 matrix. Array of 6 floats [scaleX,skewX,transX,skewY,scaleY,transY]. Identity matrix is `[1,0,0,0,1,0]`. A rotation matrix will typically look like: [cos(angle), -sin(angle), 0, sin(angle), cos(angle), 0]. Example for 90° is `[0,-1,0,1,0,0]`.
+* **Vertex** — Path vertex point. Array of 2, 3, 4, 6 or 8 floats. If array length is 2 - it's just a point [x, y]. Example: `[4,2]`. Third value, if present, is a byte enum of `CurveMode`. Fourth value, if present, is a corner radius. The next possible 2 values is: fromX, fromY - first control point position. And the last 2 floats is: toX, toY - second control point position. Full spec is: `[x, y, mode, radius, fromX, fromY, toX, toY]`.
+* Layers requiring first field to be `_t` to specify type (e.g., `"RECT"`, `"TEXT"`, `"GROUP"`).
+* All non-enum fields below are in format: `(type) (name) = (default value)`. If property value is default - it can be skipped.
+
+## Icon — external data object. Set a searchable english name and icon will be downloaded from Icons8 server. Use this to save tokens. Examples: `Home`, `Back`, `Close`.
+
+Has all properties of `Layer`, plus:
+* string _t = "ICON"
+* Color fill - required
+
+## Photo — external data object. Set a searchable english name and photo will be downloaded from Icons8 server. Use this to save tokens.
+
+Has all properties of `Layer`, plus:
+* string _t = "PHOTO"
+
+## Avatar — external data object. Random human avatar will be downloaded from Icons8 server. Use this to save tokens.
+
+Has all properties of `Layer`, plus:
+* string _t = "AVATAR"
+
+## Layer — Base class for any layer on a canvas.
+
+* string _t — object type. Required to be first.
+* GUID id
+* string name
+* BoolOp boolOp = 0
+* bool locked = false
+* bool hidden = false
+* ExportOption[] export
+* string constraints = "LTWH"
+* Matrix transform = [1,0,0,0,1,0] - position, rotation, skew and flips of an object, stored in a single 3x2 matrix, as 6 floats array.
+* Point pos = [0,0] - defines position. Overrides Transform field.
+* Size size = [100,100]
+* Rect frame = [0,0,100,100] - defines position and size with one field. Overrides Transform, Pos and Size fields.
+* bool lockAspect = false
+* bool mask = false
+* bool breakMask = false
+* MaskType maskType = 0
+* float minWidth = 0
+* float minHeight = 0
+* float maxWidth = 0
+* float maxHeight = 0
+* bool stretchWidth = false - determines if the layer should stretch width (auto layout).
+* bool stretchHeight = false - determines whether a layer should stretch height (auto layout).
+* bool absolutePos = false - enables absolute position for the layer (auto layout).
+* float opacity = 1
+* PathFillType winding = 1
+* Color fill - if there is a single color fill - use this, otherwise use Fills field.
+* Color border - if there is a single color border - use this, otherwise use Borders field.
+* Fill[] fills
+* Fill[] borders
+* float thickness = 0
+* Thickness customThickness = [0,0,0,0]
+* LinePosition linePos = 0
+* LineCap lineCap = 0
+* LineJoin lineJoin = 0
+* float[] dash - defines the size of dashes.
+* ShadowEffect[] shadows
+* ShadowEffect[] innerShadows
+* BlurEffect blur
+* float[] cornerRadius = float[4]
+* bool smoothCorners = false
+
+## Frame — A frame is a special type of layers that serves as a container for other layers or layer groups. Frames are a must for auto-layout and prototypes.
+
+Has all properties of `Layer`, plus:
+* string _t = "FRAME"
+* bool clipContent = true
+* bool flowHome = false
+* PrototypeViewport viewport
+* bool resizesContent = false
+* AutoLayout autoLayout
+* Layer[] layers
+
+## Path — A vector path determines the outline and form of a vector object. A path is made up of points and segments.
+
+Has all properties of `Layer`, plus:
+* string _t = "PATH"
+* Arrowhead startMarker = 0
+* Arrowhead endMarker = 0
+* bool edited = false
+* bool open = false
+* Vertex[] points - list of path's points.
+* string pathData - optional Field. SVG path data. Overrides Points. Only for LLM and Plugins.
+
+## Component — A component is a reusable frame of layers.
+
+Has all properties of `Frame`, plus:
+* string _t = "COMPONENT"
+* GUID componentId
+
+## Oval
+
+Has all properties of `Path`, plus:
+* string _t = "OVAL"
+
+## Rectangle
+
+Has all properties of `Path`, plus:
+* string _t = "RECT"
+* bool smoothCorners = false
+
+## Star
+
+Has all properties of `Path`, plus:
+* string _t = "STAR"
+* float rays = 0 - defines the number of rays in a star.
+* float ratio = 0 - defines the star ratio value.
+
+## States — Set of a states of the component.
+
+Has all properties of `Frame`, plus:
+* string _t = "STATES"
+
+## Group
+
+Has all properties of `Layer`, plus:
+* string _t = "GROUP"
+* Layer[] layers
+
+## Instance — An instance is a linked copy of the component. With instances, you can reuse the same design element in multiple places in your project while retaining a connection to the component.
+
+Has all properties of `Layer`, plus:
+* string _t = "INSTANCE"
+* GUID componentId
+* AutoLayout autoLayout
+
+## Section — Root group of layers. Can be a child of a page or another section. Does not support rotation, flips, effects.
+
+Has all properties of `Layer`, plus:
+* string _t = "SECTION"
+* Layer[] layers
+
+## Shape — Group of path's
+
+Has all properties of `Layer`, plus:
+* string _t = "SHAPE"
+* Arrowhead startMarker = 0
+* Arrowhead endMarker = 0
+* Layer[] layers
+
+## Text
+
+Has all properties of `Layer`, plus:
+* string _t = "TEXT"
+* string text
+* string font = "Inter-Regular"
+* float fontSize = 12
+* float paragraphSpacing = 0
+* float baselineOffset = 0
+* float? lineHeight
+* CharacterCasing casing = 0
+* TextHorizontalAlignment align = 0
+* TextVerticalAlignment valign = 0
+* ListMarkerType list = 0
+* bool rtl = false
+* bool underline = false
+* bool strikethrough = false
+* InlineStyle[] inlines
+* TextBehavior behavior = 0
+* bool clipContent = true
+* bool truncate = false
+* byte maxLines = 0
+* bool drawOnPath = false
+* bool warp = false
+
+## AutoLayout
+
+* bool vertical = false
+* float spacing = 0
+* float wrapSpacing = 0
+* Thickness padding = [0,0,0,0]
+* HorizontalAlignment align = 0
+* VerticalAlignment valign = 0
+* bool fixWidth = false
+* bool fixHeight = false
+* bool textBaseline = false
+* bool wrap = false
+
+## BlurEffect
+
+* float saturation = 1
+* float radius = 10
+* BlurType type = 0
+
+## ExportOption
+
+* string format = "PNG"
+* ScaleType type = 0
+* float size = 0
+* string name
+* NamingScheme naming = 0
+
+## Fill
+
+* Color color = "00000000"
+* GUID? colorId
+* FillType type = 0
+* float opacity = 0
+* Pattern pattern
+* Gradient gradient
+
+## Gradient
+
+* GradientType type = 0
+* Point from = [0.5,0]
+* Point to = [0.5,1]
+* Point side = [0,0]
+* GradientStop[] stops
+
+## GradientStop — A position-color pair representing a gradient stop.
+
+* float pos = 0 - value between 0 and 1 representing a position along gradient axis.
+* Color color = "00000000"
+* GUID? colorId
+
+## InlineStyle — Style (bold, italic, etc.) applied to a part of text or single word within a text block.
+
+* int start = 0
+* int length = 0
+* Color fill - if there is a single color fill - use this, otherwise use Fills field.
+* Fill[] fills
+* string font = "Inter-Regular"
+* float fontSize = 12
+* float paragraphSpacing = 0
+* float baselineOffset = 0
+* float? lineHeight
+* CharacterCasing casing = 0
+* TextHorizontalAlignment align = 0
+* TextVerticalAlignment valign = 0
+* ListMarkerType list = 0
+* bool rtl = false
+* bool underline = false
+* bool strikethrough = false
+
+## Pattern — Defines the image fill options.
+
+* PatternFillType type = 1
+* string image
+* Matrix? transform - defines how the image is cropped. Applicable to the crop type only.
+
+## PrototypeViewport — This is a frame preset. Also used to determine viewport size for a large frame to scroll it properly.
+
+* GUID id
+* string name
+* Size size = [0,0]
+* GUID libraryId
+
+## ShadowEffect
+
+* float radius = 0
+* Color color = "00000000"
+* GUID? colorId
+* float spread = 0
+* Point offset = [0,0]
+
+## Enum Arrowhead
+
+0. none
+1. arrow
+2. arrowFilled
+3. line
+4. circle
+5. circleFilled
+6. square
+7. squareFilled
+
+## Enum BlurType
+
+0. gaussian
+3. background
+
+## Enum BoolOp — Types of boolean operations used to combine shapes.
+
+-1. none
+0. union
+1. subtract
+2. intersect
+3. difference
+
+## Enum CharacterCasing — Defines letter case.
+
+0. normal
+1. upperCase
+2. lowerCase
+3. titleCase
+
+## Enum CurveMode — Defines the types of points on Bézier curves.
+
+0. none
+1. straight
+2. mirrored
+3. asymmetric
+4. disconnected
+4. onlyFrom
+5. onlyTo
+
+## Enum FillType
+
+0. color
+1. gradient
+4. pattern
+
+## Enum GradientType
+
+0. linear
+1. radial
+2. angular
+
+## Enum HorizontalAlignment
+
+0. left
+1. center
+2. right
+3. distribute
+
+## Enum LineCap
+
+0. butt
+1. round
+2. square
+
+## Enum LineJoin
+
+0. miter
+1. round
+2. bevel
+
+## Enum LinePosition — Defines the border position.
+
+0. center
+1. inside
+2. outside
+
+## Enum ListMarkerType
+
+0. none
+1. bullet
+2. numbered
+
+## Enum MaskType
+
+0. vector
+1. alpha
+2. luminance
+
+## Enum PathFillType — Defines the filling options for overlapping paths.
+
+0. winding
+1. evenOdd
+
+## Enum PatternFillType — Defines the image fill type.
+
+0. tile
+1. fill
+2. stretch
+3. fit
+4. crop
+
+## Enum ScaleType
+
+0. scale
+1. width
+2. height
+
+## Enum TextBehavior — Defines textbox behavior options.
+
+0. flexible
+1. autoHeight
+2. fixed
+
+## Enum TextHorizontalAlignment
+
+0. left
+1. right
+2. center
+3. justify
+
+## Enum TextVerticalAlignment
+
+0. top
+1. middle
+2. bottom
+
+## Enum VerticalAlignment
+
+0. top
+1. center
+2. bottom
+3. distribute
+
+

@@ -1,0 +1,13 @@
+services:
+  backend-php:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - ADMIN_PASSWORD=capibara
+      - SITE_URL=http://localhost:8000
+      - SITE_NAME=Capibara
+    volumes:
+      - ./content:/app/content
+      - ./sessions:/app/sessions
+    restart: unless-stopped

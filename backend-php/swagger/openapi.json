@@ -1,0 +1,196 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Capibara Articles API",
+    "description": "Публичный API для получения новостных статей из Android-приложения Capibara. Статьи хранятся в .md файлах.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Локальный сервер"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Articles",
+      "description": "Публичные эндпоинты"
+    }
+  ],
+  "paths": {
+    "/api/articles": {
+      "get": {
+        "tags": ["Articles"],
+        "summary": "Получить список всех статей",
+        "description": "Возвращает список статей в формате, совместимом с NewsRepositoryImpl Android-приложения",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewsResponse"
+                },
+                "example": {
+                  "totalArticles": 1,
+                  "articles": [
+                    {
+                      "id": "9a60ddd22dc114b1c2b63c4fbe8103f9",
+                      "title": "Тест статьи",
+                      "description": "Краткое описание",
+                      "content": "Привет, капибара!",
+                      "url": "http://localhost:8000/articles/test-stati",
+                      "image": "https://example.com/capybara.jpg",
+                      "publishedAt": "2026-10-21T17:27:00Z",
+                      "lang": "ru",
+                      "source": {
+                        "id": "capibara",
+                        "name": "Capibara",
+                        "url": "http://localhost:8000",
+                        "country": "ru"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/articles/{slug}": {
+      "get": {
+        "tags": ["Articles"],
+        "summary": "Получить статью по slug",
+        "description": "Возвращает одну статью по её slug",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "test-stati"
+            },
+            "description": "URL-friendly идентификатор статьи"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Article"
+                },
+                "example": {
+                  "id": "9a60ddd22dc114b1c2b63c4fbe8103f9",
+                  "title": "Тест статьи",
+                  "description": "Краткое описание",
+                  "content": "Привет, капибара!",
+                  "url": "http://localhost:8000/articles/test-stati",
+                  "image": "https://example.com/capybara.jpg",
+                  "publishedAt": "2026-10-21T17:27:00Z",
+                  "lang": "ru",
+                  "source": {
+                    "id": "capibara",
+                    "name": "Capibara",
+                    "url": "http://localhost:8000",
+                    "country": "ru"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Статья не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Article not found"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Source": {
+        "type": "object",
+        "required": ["id", "name", "url", "country"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          }
+        }
+      },
+      "Article": {
+        "type": "object",
+        "required": ["id", "title", "description", "content", "url", "image", "publishedAt", "lang", "source"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lang": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          }
+        }
+      },
+      "NewsResponse": {
+        "type": "object",
+        "required": ["totalArticles", "articles"],
+        "properties": {
+          "totalArticles": {
+            "type": "integer"
+          },
+          "articles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Article"
+            }
+          }
+        }
+      }
+    }
+  }
+}

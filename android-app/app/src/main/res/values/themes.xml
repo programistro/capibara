@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.Capibara" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Перенесено из com.example.pet -->
+    <style name="Base.Theme.Pet" parent="Theme.Material3.DayNight.NoActionBar" />
+    <style name="Theme.Pet" parent="Base.Theme.Pet" />
+</resources>
