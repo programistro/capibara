@@ -5,9 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.capibara.domain.repository.InventoryRepository
 import com.example.capibara.domain.repository.MoodRepository
 import com.example.capibara.domain.repository.WalletRepository
-import com.example.capibara.domain.usecase.GetAllRemindersUseCase
+import com.example.capibara.domain.usecase.GetNewsUseCase
 import com.example.capibara.domain.usecase.GetPetStatsUseCase
 import com.example.capibara.domain.usecase.GetRemindersUseCase
+import com.example.capibara.domain.usecase.RefreshNewsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +24,8 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     getPetStats: GetPetStatsUseCase,
     private val getReminders: GetRemindersUseCase,
-    private val getAllReminders: GetAllRemindersUseCase,
+    private val getNews: GetNewsUseCase,
+    private val refreshNewsUseCase: RefreshNewsUseCase,
     private val walletRepository: WalletRepository,
     private val moodRepository: MoodRepository,
     private val inventoryRepository: InventoryRepository
@@ -61,18 +63,18 @@ class MainViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(news = getAllReminders()) }
+            getNews().collect { articles ->
+                _uiState.update { it.copy(news = articles) }
+            }
         }
+
+        loadNews(force = false)
     }
 
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
     fun onTabSelected(index: MainTab) {
         _uiState.update { it.copy(selectedTab = index, isFormOpen = false) }
-    }
-
-    fun onUpdateRefreshing(refreshing: Boolean){
-        _uiState.update { it.copy(isRefreshing = !refreshing) }
     }
 
     fun onOpenForm() {
@@ -82,9 +84,7 @@ class MainViewModel @Inject constructor(
     fun onCloseForm() {
         _uiState.update { it.copy(isFormOpen = false) }
         refreshReminders(_uiState.value.date)
-        viewModelScope.launch {
-            refreshAllNews()
-        }
+        refreshNews()
     }
 
     fun onDateSelected(date: String) {
@@ -101,10 +101,19 @@ class MainViewModel @Inject constructor(
         _uiState.update { it.copy(reminders = getReminders(date)) }
     }
 
-    fun refreshAllNews() {
+    fun refreshNews() {
+        loadNews(force = true)
+    }
+
+    private fun loadNews(force: Boolean) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isRefreshing = true) }
-            _uiState.update { it.copy(news = getAllReminders()) }
+            _uiState.update { it.copy(isRefreshing = true, newsError = null) }
+            refreshNewsUseCase(force)
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(newsError = error.message ?: "Не удалось загрузить новости")
+                    }
+                }
             _uiState.update { it.copy(isRefreshing = false) }
         }
     }

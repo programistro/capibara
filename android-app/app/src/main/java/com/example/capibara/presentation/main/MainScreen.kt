@@ -78,21 +78,18 @@ import com.example.capibara.ui.theme.ScreenBackground
 import java.util.Calendar
 import java.util.Locale
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
 import com.example.capibara.domain.model.Article
 import com.example.capibara.domain.model.MoodLevel
 import com.example.capibara.domain.model.NewsResponse
-import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(
     state: MainUiState,
     shopState: ShopUiState,
+    onDateilsNews: (Article) -> Unit,
     formState: ReminderFormUiState,
     onTabSelected: (MainTab) -> Unit,
     refreshNews:() -> Unit,
@@ -113,7 +110,6 @@ fun MainScreen(
     onFormClose: () -> Unit
 ) {
     RequestNotificationPermission()
-    val scope = rememberCoroutineScope()
     val stats = state.petStats
     Column(
         modifier = Modifier
@@ -203,7 +199,9 @@ fun MainScreen(
                         }
                     ){
                         NewsTab(
-                            news = state.news
+                            news = state.news,
+                            error = state.newsError,
+                            onDateilsClick = onDateilsNews
                         )
                     }
                 }
@@ -404,7 +402,11 @@ private fun HomeTab(
 }
 
 @Composable
-private fun NewsTab(news: List<Article>) {
+private fun NewsTab(
+    news: List<Article>,
+    error: String?,
+    onDateilsClick: (Article) -> Unit
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -425,7 +427,11 @@ private fun NewsTab(news: List<Article>) {
         if (news.isEmpty()) {
             item {
                 Text(
-                    text = "Не удалось загрузить новости",
+                    text = if (error != null) {
+                        "Не удалось загрузить новости"
+                    } else {
+                        "На сегодня новостей нет"
+                    },
                     fontSize = 18.sp,
                     color = Color.Black,
                     textAlign = TextAlign.Center,
@@ -434,19 +440,19 @@ private fun NewsTab(news: List<Article>) {
             }
         } else {
             items(news) { reminder ->
-                NewsCard(reminder, onClick = {})
+                NewsCard(reminder, onClick = onDateilsClick)
             }
         }
     }
 }
 
 @Composable
-private fun NewsCard( article: Article,
-                      onClick: () -> Unit,
-                      modifier: Modifier = Modifier
+private fun NewsCard(article: Article,
+                     onClick: (Article) -> Unit,
+                     modifier: Modifier = Modifier
 ) {
     Card(
-        onClick = onClick,
+        onClick = { onClick(article) },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
@@ -774,6 +780,7 @@ private fun MainScreenPreview() {
             ),
             shopState = ShopUiState(),
             formState = ReminderFormUiState(),
+            onDateilsNews = {},
             onTabSelected = {},
             onAddClick = {},
             refreshNews = {},

@@ -13,5 +13,6 @@ data class MainUiState(
     val selectedTab: MainTab,
     val isFormOpen: Boolean = false,
     val selectedItemId: Int? = null,
-    val isRefreshing: Boolean = false
+    val isRefreshing: Boolean = false,
+    val newsError: String? = null
 )

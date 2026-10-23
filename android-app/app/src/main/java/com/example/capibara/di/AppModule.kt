@@ -7,7 +7,9 @@ import com.example.capibara.data.local.CapibaraDatabase
 import com.example.capibara.data.local.InventoryDao
 import com.example.capibara.data.local.MIGRATION_1_2
 import com.example.capibara.data.local.MIGRATION_2_3
+import com.example.capibara.data.local.MIGRATION_3_4
 import com.example.capibara.data.local.MoodDao
+import com.example.capibara.data.local.NewsDao
 import com.example.capibara.data.local.WalletDao
 import com.example.capibara.data.repository.AuthRepositoryImpl
 import com.example.capibara.data.repository.InventoryRepositoryImpl
@@ -97,6 +99,7 @@ object AppModule {
         Room.databaseBuilder(context, CapibaraDatabase::class.java, "capibara.db")
             .addMigrations(MIGRATION_1_2)
             .addMigrations(MIGRATION_2_3)
+            .addMigrations(MIGRATION_3_4)
             .build()
 
     @Provides
@@ -106,6 +109,10 @@ object AppModule {
     @Provides
     @JvmStatic
     fun provideInventoryDao(db: CapibaraDatabase): InventoryDao = db.inventoryDao()
+
+    @Provides
+    @JvmStatic
+    fun provideNewsDao(db: CapibaraDatabase): NewsDao = db.newsDao()
 
     private const val PREFS_NAME = "capibara"
 }

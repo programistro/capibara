@@ -14,6 +14,7 @@ import com.example.capibara.presentation.auth.AuthViewModel
 import com.example.capibara.presentation.main.MainScreen
 import com.example.capibara.presentation.main.MainTab
 import com.example.capibara.presentation.main.MainViewModel
+import com.example.capibara.presentation.main.NewsDetailDestination
 import com.example.capibara.presentation.main.ReminderFormViewModel
 import com.example.capibara.presentation.registration.RegistrationScreen
 import com.example.capibara.presentation.registration.RegistrationViewModel
@@ -46,6 +47,9 @@ fun AppNavGraph(startDestination: String) {
                 onRegisterClick = { navController.navigate(Route.Registration.route) }
             )
         }
+        composable<NewsDetailRoute> {
+            NewsDetailDestination()
+        }
         composable(Route.Registration.route) {
             val viewModel: RegistrationViewModel = hiltViewModel()
             val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -72,7 +76,10 @@ fun AppNavGraph(startDestination: String) {
             MainScreen(
                 state = state,
                 shopState = shopState,
-                refreshNews = mainViewModel::refreshAllNews,
+                refreshNews = mainViewModel::refreshNews,
+                onDateilsNews = { article ->
+                    navController.navigate(NewsDetailRoute(article.id))
+                },
                 formState = formState,
                 onTabSelected = mainViewModel::onTabSelected,
                 onAddClick = mainViewModel::onOpenForm,
