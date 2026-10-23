@@ -21,7 +21,7 @@ class NewsRepositoryImpl @Inject constructor(
     private val client: HttpClient
 ) : NewsRepository {
 //    private val baseUrl = "https://gnews.io/api/v4/search?q=Медицина&lang=ru&apikey=${BuildConfig.GNEWS_API_KEY}"
-    private val baseUrl = "http://192.168.1.83:8000/api/articles"
+    private val baseUrl = "http://100.97.211.32:8000/api/articles"
     private val json = Json {
         encodeDefaults = true
         isLenient = true

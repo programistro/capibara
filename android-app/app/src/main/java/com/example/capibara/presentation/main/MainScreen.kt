@@ -28,7 +28,9 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Checkroom
 import androidx.compose.material.icons.filled.Medication
@@ -43,6 +45,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -75,12 +78,16 @@ import com.example.capibara.ui.theme.ScreenBackground
 import java.util.Calendar
 import java.util.Locale
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
 import com.example.capibara.domain.model.Article
 import com.example.capibara.domain.model.MoodLevel
 import com.example.capibara.domain.model.NewsResponse
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(
@@ -88,6 +95,7 @@ fun MainScreen(
     shopState: ShopUiState,
     formState: ReminderFormUiState,
     onTabSelected: (MainTab) -> Unit,
+    refreshNews:() -> Unit,
     onAddClick: () -> Unit,
     onTodayClick: () -> Unit,
     onDateSelected: (String) -> Unit,
@@ -105,7 +113,7 @@ fun MainScreen(
     onFormClose: () -> Unit
 ) {
     RequestNotificationPermission()
-
+    val scope = rememberCoroutineScope()
     val stats = state.petStats
     Column(
         modifier = Modifier
@@ -186,9 +194,19 @@ fun MainScreen(
                     title = "Игры",
                     text = "Тетрис скоро появится"
                 )
-                state.selectedTab == MainTab.NEWS -> NewsTab(
-                    news = state.news
-                )
+                state.selectedTab == MainTab.NEWS -> {
+                    PullToRefreshBox(
+                        modifier = Modifier.fillMaxSize(),
+                        isRefreshing = state.isRefreshing,
+                        onRefresh = {
+                            refreshNews()
+                        }
+                    ){
+                        NewsTab(
+                            news = state.news
+                        )
+                    }
+                }
                 else -> HomeTab(
                     state = state,
                     onAddClick = onAddClick,
@@ -387,35 +405,36 @@ private fun HomeTab(
 
 @Composable
 private fun NewsTab(news: List<Article>) {
-    Column(
+    LazyColumn(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(20.dp)
+            .fillMaxSize()
+            .padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = "Новости на сегодня",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        if (news.isEmpty()) {
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Не удалось загрузить новости",
-                fontSize = 18.sp,
+                text = "Новости на сегодня",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
                 color = Color.Black,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
+        }
+        if (news.isEmpty()) {
+            item {
+                Text(
+                    text = "Не удалось загрузить новости",
+                    fontSize = 18.sp,
+                    color = Color.Black,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(news) { reminder ->
-                    NewsCard(reminder, onClick = {})
-                }
+            items(news) { reminder ->
+                NewsCard(reminder, onClick = {})
             }
         }
     }
@@ -757,6 +776,7 @@ private fun MainScreenPreview() {
             formState = ReminderFormUiState(),
             onTabSelected = {},
             onAddClick = {},
+            refreshNews = {},
             onTodayClick = {},
             onDateSelected = {},
             onBuyClick = {},

@@ -71,6 +71,10 @@ class MainViewModel @Inject constructor(
         _uiState.update { it.copy(selectedTab = index, isFormOpen = false) }
     }
 
+    fun onUpdateRefreshing(refreshing: Boolean){
+        _uiState.update { it.copy(isRefreshing = !refreshing) }
+    }
+
     fun onOpenForm() {
         _uiState.update { it.copy(isFormOpen = true) }
     }
@@ -97,7 +101,11 @@ class MainViewModel @Inject constructor(
         _uiState.update { it.copy(reminders = getReminders(date)) }
     }
 
-    private suspend fun refreshAllNews() {
-        _uiState.update { it.copy(news = getAllReminders()) }
+    fun refreshAllNews() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRefreshing = true) }
+            _uiState.update { it.copy(news = getAllReminders()) }
+            _uiState.update { it.copy(isRefreshing = false) }
+        }
     }
 }

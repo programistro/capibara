@@ -72,6 +72,7 @@ fun AppNavGraph(startDestination: String) {
             MainScreen(
                 state = state,
                 shopState = shopState,
+                refreshNews = mainViewModel::refreshAllNews,
                 formState = formState,
                 onTabSelected = mainViewModel::onTabSelected,
                 onAddClick = mainViewModel::onOpenForm,
