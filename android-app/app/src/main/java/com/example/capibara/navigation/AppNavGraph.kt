@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.capibara.presentation.auth.AuthScreen
 import com.example.capibara.presentation.auth.AuthViewModel
+import com.example.capibara.presentation.games.SnakeViewModel
 import com.example.capibara.presentation.main.MainScreen
 import com.example.capibara.presentation.main.MainTab
 import com.example.capibara.presentation.main.MainViewModel
@@ -70,12 +71,19 @@ fun AppNavGraph(startDestination: String) {
             val mainViewModel: MainViewModel = hiltViewModel()
             val shopViewModel: ShopViewModel = hiltViewModel()
             val formViewModel: ReminderFormViewModel = hiltViewModel()
+            val snakeViewModel: SnakeViewModel = hiltViewModel()
             val state by mainViewModel.uiState.collectAsStateWithLifecycle()
             val shopState by shopViewModel.uiState.collectAsStateWithLifecycle()
             val formState by formViewModel.uiState.collectAsStateWithLifecycle()
+            val snakeState by snakeViewModel.state.collectAsStateWithLifecycle()
+            val snakeGameOver by snakeViewModel.gameOver.collectAsStateWithLifecycle()
             MainScreen(
                 state = state,
                 shopState = shopState,
+                snakeState = snakeState,
+                snakeGameOver = snakeGameOver,
+                onSnakeDirectionChange = snakeViewModel::onDirectionChange,
+                onSnakeRestart = snakeViewModel::onRestart,
                 refreshNews = mainViewModel::refreshNews,
                 onDateilsNews = { article ->
                     navController.navigate(NewsDetailRoute(article.id))

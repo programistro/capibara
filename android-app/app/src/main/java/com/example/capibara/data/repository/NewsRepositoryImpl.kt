@@ -22,7 +22,7 @@ class NewsRepositoryImpl @Inject constructor(
 ) : NewsRepository {
 
 //    private val baseUrl = "https://gnews.io/api/v4/search?q=Медицина&lang=ru&apikey=${BuildConfig.GNEWS_API_KEY}"
-    private val baseUrl = "http://100.97.211.32:8000/api/articles"
+    private val baseUrl = "http://j99514la.beget.tech/api/articles"
 
     override fun observeNews(): Flow<List<Article>> =
         newsDao.observeArticles().map { articles ->

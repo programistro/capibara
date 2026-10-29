@@ -67,6 +67,10 @@ import com.example.capibara.R
 import com.example.capibara.domain.model.PetSprite
 import com.example.capibara.domain.model.PetStats
 import com.example.capibara.domain.model.ShopItem
+import com.example.capibara.domain.game.SnakeDirection
+import com.example.capibara.domain.game.SnakeState
+import com.example.capibara.presentation.games.GameOverResult
+import com.example.capibara.presentation.games.SnakeScreen
 import com.example.capibara.presentation.shop.ShopScreen
 import com.example.capibara.presentation.shop.ShopUiState
 import com.example.capibara.ui.theme.CapibaraTheme
@@ -89,6 +93,10 @@ import com.example.capibara.domain.model.NewsResponse
 fun MainScreen(
     state: MainUiState,
     shopState: ShopUiState,
+    snakeState: SnakeState,
+    snakeGameOver: GameOverResult?,
+    onSnakeDirectionChange: (SnakeDirection) -> Unit,
+    onSnakeRestart: () -> Unit,
     onDateilsNews: (Article) -> Unit,
     formState: ReminderFormUiState,
     onTabSelected: (MainTab) -> Unit,
@@ -186,9 +194,11 @@ fun MainScreen(
                     onBackClick = onShopBackClick,
                     onClearError = onClearError
                 )
-                state.selectedTab == MainTab.GAMES -> StubTab(
-                    title = "Игры",
-                    text = "Тетрис скоро появится"
+                state.selectedTab == MainTab.GAMES -> SnakeScreen(
+                    state = snakeState,
+                    gameOver = snakeGameOver,
+                    onDirectionChange = onSnakeDirectionChange,
+                    onRestart = onSnakeRestart
                 )
                 state.selectedTab == MainTab.NEWS -> {
                     PullToRefreshBox(
@@ -779,6 +789,14 @@ private fun MainScreenPreview() {
                 selectedTab = MainTab.NEWS
             ),
             shopState = ShopUiState(),
+            snakeState = SnakeState(
+                snake = listOf(16 to 16),
+                food = 5 to 5,
+                direction = SnakeDirection.RIGHT
+            ),
+            snakeGameOver = null,
+            onSnakeDirectionChange = {},
+            onSnakeRestart = {},
             formState = ReminderFormUiState(),
             onDateilsNews = {},
             onTabSelected = {},
