@@ -72,6 +72,10 @@ import com.example.capibara.domain.game.SnakeDirection
 import com.example.capibara.domain.game.SnakeState
 import com.example.capibara.presentation.games.GameOverResult
 import com.example.capibara.presentation.games.SnakeScreen
+import com.example.capibara.presentation.games.GameKind
+import com.example.capibara.presentation.games.GamesHubScreen
+import com.example.capibara.presentation.games.dino.DinoGameScreen
+import com.example.capibara.presentation.games.dino.DinoGameState
 import com.example.capibara.presentation.shop.ShopScreen
 import com.example.capibara.presentation.shop.ShopUiState
 import com.example.capibara.ui.theme.CapibaraTheme
@@ -99,9 +103,10 @@ fun MainScreen(
     snakeCoinsEarned: Int,
     onSnakeDirectionChange: (SnakeDirection) -> Unit,
     onSnakeRestart: () -> Unit,
-    onGameFullscreenToggle: () -> Unit,
-    onExitGameFullscreen: () -> Unit,
+    onExitGame: () -> Unit,
+    onGameSelected: (GameKind) -> Unit,
     onGameStart: () -> Unit,
+    dinoState: DinoGameState,
     onDateilsNews: (Article) -> Unit,
     formState: ReminderFormUiState,
     onTabSelected: (MainTab) -> Unit,
@@ -124,33 +129,43 @@ fun MainScreen(
 ) {
     RequestNotificationPermission()
     val stats = state.petStats
-    val isFullscreenGame = state.selectedTab == MainTab.GAMES && state.isGameFullscreen
+    val activeGame = state.activeGame
 
-    // Полноэкранный режим игры: рисуем только поле с заголовком и крестовиной.
-    // Шапку с капибарой и нижнее меню убираем — иначе поле остаётся зажатым
-    // в узкой карточке и места для игры почти не остаётся.
-    if (isFullscreenGame) {
-        LaunchedEffect(Unit) { onGameStart() }
+    // Полноэкранный режим игры: шапка с капибарой и нижнее меню скрыты,
+    // игра занимает весь экран. Выход — крестик в шапке самой игры.
+    if (activeGame != null) {
+        LaunchedEffect(activeGame) {
+            if (activeGame == GameKind.SNAKE) onGameStart()
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(ScreenBackground)
                 .imePadding()
         ) {
-            SnakeScreen(
-                state = snakeState,
-                gameOver = snakeGameOver,
-                onDirectionChange = onSnakeDirectionChange,
-                onRestart = onSnakeRestart,
-                earnedCoins = snakeCoinsEarned,
-                fullscreen = true,
-                onToggleFullscreen = onExitGameFullscreen,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()
-                    .navigationBarsPadding()
-                    .padding(horizontal = 12.dp)
-            )
+            val inner = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+
+            when (activeGame) {
+                GameKind.SNAKE -> SnakeScreen(
+                    state = snakeState,
+                    gameOver = snakeGameOver,
+                    onDirectionChange = onSnakeDirectionChange,
+                    onRestart = onSnakeRestart,
+                    earnedCoins = snakeCoinsEarned,
+                    fullscreen = true,
+                    onToggleFullscreen = onExitGame,
+                    modifier = inner.padding(horizontal = 12.dp)
+                )
+                GameKind.DINO -> DinoGameScreen(
+                    state = dinoState,
+                    fullscreen = true,
+                    onToggleFullscreen = onExitGame,
+                    modifier = inner
+                )
+            }
         }
         return
     }
@@ -230,21 +245,9 @@ fun MainScreen(
                     onBackClick = onShopBackClick,
                     onClearError = onClearError
                 )
-                state.selectedTab == MainTab.GAMES -> {
-                    // Игра стартует не в init ViewModel, а когда пользователь
-                    // реально открыл вкладку — иначе змейка ползла бы в фоне
-                    // на других экранах и монеты начислялись бы незаметно.
-                    LaunchedEffect(Unit) { onGameStart() }
-                    SnakeScreen(
-                        state = snakeState,
-                        gameOver = snakeGameOver,
-                        onDirectionChange = onSnakeDirectionChange,
-                        onRestart = onSnakeRestart,
-                        earnedCoins = snakeCoinsEarned,
-                        fullscreen = false,
-                        onToggleFullscreen = onGameFullscreenToggle
-                    )
-                }
+                state.selectedTab == MainTab.GAMES -> GamesHubScreen(
+                    onGameSelected = onGameSelected
+                )
                 state.selectedTab == MainTab.NEWS -> {
                     PullToRefreshBox(
                         modifier = Modifier.fillMaxSize(),
@@ -847,9 +850,10 @@ private fun MainScreenPreview() {
             snakeCoinsEarned = 0,
             onSnakeDirectionChange = {},
             onSnakeRestart = {},
-            onGameFullscreenToggle = {},
-            onExitGameFullscreen = {},
+            onExitGame = {},
+            onGameSelected = {},
             onGameStart = {},
+            dinoState = remember { DinoGameState() },
             formState = ReminderFormUiState(),
             onDateilsNews = {},
             onTabSelected = {},

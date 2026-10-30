@@ -3,6 +3,7 @@ package com.example.capibara.presentation.main
 import com.example.capibara.domain.model.Article
 import com.example.capibara.domain.model.PetStats
 import com.example.capibara.domain.model.Reminder
+import com.example.capibara.presentation.games.GameKind
 
 data class MainUiState(
     val date: String = "",
@@ -15,6 +16,6 @@ data class MainUiState(
     val selectedItemId: Int? = null,
     val isRefreshing: Boolean = false,
     val newsError: String? = null,
-    /** Игра развёрнута на весь экран: скрываем шапку с капибарой и нижнее меню. */
-    val isGameFullscreen: Boolean = false
+    /** Какая игра открыта полноэкранно. null — показан список игр. */
+    val activeGame: GameKind? = null
 )

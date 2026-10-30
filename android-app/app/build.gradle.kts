@@ -58,6 +58,15 @@ android {
             }
         }
     }
+    testOptions {
+        unitTests {
+            // Игровые пути (PathParser) дёргают android.graphics.Path —
+            // в JVM-тестах он не реализован, поэтому возвращаем заглушки
+            // вместо падения. Геометрию динозавра это не искажает.
+            isReturnDefaultValues = true
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11

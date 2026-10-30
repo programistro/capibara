@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -176,21 +175,10 @@ private fun Header(
             }
         }
 
+        // Справа оставляем место того же размера, что и крестик слева,
+        // чтобы заголовок «Змейка» стоял по центру.
         if (fullscreen) {
             Spacer(modifier = Modifier.size(40.dp))
-        } else {
-            IconButton(
-                onClick = onToggleFullscreen,
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(PrimaryGreen.copy(alpha = 0.18f), CircleShape)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Fullscreen,
-                    contentDescription = "Развернуть на весь экран",
-                    tint = IconDark
-                )
-            }
         }
     }
 }

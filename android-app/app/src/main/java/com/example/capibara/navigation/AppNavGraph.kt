@@ -3,6 +3,7 @@ package com.example.capibara.navigation
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -12,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.capibara.presentation.auth.AuthScreen
 import com.example.capibara.presentation.auth.AuthViewModel
 import com.example.capibara.presentation.games.SnakeViewModel
+import com.example.capibara.presentation.games.dino.DinoGameState
 import com.example.capibara.presentation.main.MainScreen
 import com.example.capibara.presentation.main.MainTab
 import com.example.capibara.presentation.main.MainViewModel
@@ -78,6 +80,8 @@ fun AppNavGraph(startDestination: String) {
             val snakeState by snakeViewModel.state.collectAsStateWithLifecycle()
             val snakeGameOver by snakeViewModel.gameOver.collectAsStateWithLifecycle()
             val snakeCoinsEarned by snakeViewModel.coinsEarned.collectAsStateWithLifecycle()
+            // Динозавр — простой изменяемый объект, живёт в remember на экране.
+            val dinoState = remember { DinoGameState() }
             MainScreen(
                 state = state,
                 shopState = shopState,
@@ -86,8 +90,9 @@ fun AppNavGraph(startDestination: String) {
                 snakeCoinsEarned = snakeCoinsEarned,
                 onSnakeDirectionChange = snakeViewModel::onDirectionChange,
                 onSnakeRestart = snakeViewModel::onRestart,
-                onGameFullscreenToggle = mainViewModel::onGameFullscreenToggle,
-                onExitGameFullscreen = mainViewModel::onExitGameFullscreen,
+                onExitGame = mainViewModel::onExitGame,
+                onGameSelected = mainViewModel::onGameSelected,
+                dinoState = dinoState,
                 onGameStart = snakeViewModel::onScreenVisible,
                 refreshNews = mainViewModel::refreshNews,
                 onDateilsNews = { article ->

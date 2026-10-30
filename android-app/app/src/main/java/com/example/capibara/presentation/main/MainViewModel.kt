@@ -6,6 +6,7 @@ import com.example.capibara.domain.repository.InventoryRepository
 import com.example.capibara.domain.repository.MoodRepository
 import com.example.capibara.domain.repository.WalletRepository
 import com.example.capibara.domain.usecase.GetNewsUseCase
+import com.example.capibara.presentation.games.GameKind
 import com.example.capibara.domain.usecase.GetPetStatsUseCase
 import com.example.capibara.domain.usecase.GetRemindersUseCase
 import com.example.capibara.domain.usecase.RefreshNewsUseCase
@@ -78,20 +79,21 @@ class MainViewModel @Inject constructor(
             it.copy(
                 selectedTab = index,
                 isFormOpen = false,
-                // Ушли с вкладки «Игры» — полноэкранный режим сбрасываем,
-                // иначе вернёмся и увидим игру на весь экран без меню.
-                isGameFullscreen = if (index == MainTab.GAMES) it.isGameFullscreen else false
+                // Ушли с вкладки «Игры» — закрываем выбранную игру, чтобы
+                // вернувшись увидеть список, а не открытую игру без меню.
+                activeGame = if (index == MainTab.GAMES) it.activeGame else null
             )
         }
     }
 
-    /** Развернуть/свернуть игру на весь экран. */
-    fun onGameFullscreenToggle() {
-        _uiState.update { it.copy(isGameFullscreen = !it.isGameFullscreen) }
+    /** Открыть игру на весь экран. */
+    fun onGameSelected(game: GameKind) {
+        _uiState.update { it.copy(activeGame = game) }
     }
 
-    fun onExitGameFullscreen() {
-        _uiState.update { it.copy(isGameFullscreen = false) }
+    /** Закрыть игру и вернуться к списку игр. */
+    fun onExitGame() {
+        _uiState.update { it.copy(activeGame = null) }
     }
 
     fun onOpenForm() {
