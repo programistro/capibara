@@ -21,17 +21,27 @@ class SnakeViewModel @Inject constructor(
     private val _gameOver = MutableStateFlow<GameOverResult?>(null)
     val gameOver: StateFlow<GameOverResult?> = _gameOver.asStateFlow()
 
+    /** Монеты, заработанные в текущей партии. */
     private val _coinsEarned = MutableStateFlow(0)
     val coinsEarned: StateFlow<Int> = _coinsEarned.asStateFlow()
 
     private val engine = GameEngine(
         scope = viewModelScope,
-        onGameOver = { score -> onGameOver(score) }
+        onGameOver = { score -> onGameOver(score) },
+        onFoodEaten = { score -> awardForFood(score) }
     )
 
     val state: StateFlow<SnakeState> = engine.state
 
-    init {
+    // Игру НЕ запускаем в init: движок полз бы в фоне, пока пользователь
+    // на других вкладках, и монеты капали бы незаметно. Старт — при открытии
+    // вкладки «Игры» через [onScreenVisible].
+    private var started = false
+
+    /** Вызывается, когда вкладка игр показана пользователю. */
+    fun onScreenVisible() {
+        if (started) return
+        started = true
         engine.start()
     }
 
@@ -43,17 +53,21 @@ class SnakeViewModel @Inject constructor(
         _gameOver.value = null
         _coinsEarned.value = 0
         engine.restart()
+        started = true
+    }
+
+    /** Начисление за съеденную еду — по монете за очко. */
+    private fun awardForFood(score: Int) {
+        // score уже включает текущую еду, поэтому начисляем ровно COINS_PER_POINT.
+        viewModelScope.launch {
+            walletRepository.add(COINS_PER_POINT)
+            _coinsEarned.value += COINS_PER_POINT
+        }
     }
 
     private fun onGameOver(score: Int) {
-        val reward = score * COINS_PER_POINT
-        _gameOver.value = GameOverResult(score = score, coins = reward)
-        if (reward > 0) {
-            viewModelScope.launch {
-                walletRepository.add(reward)
-                _coinsEarned.value = reward
-            }
-        }
+        // Награда уже начислена по ходу игры — здесь только итоги.
+        _gameOver.value = GameOverResult(score = score, coins = _coinsEarned.value)
     }
 
     override fun onCleared() {

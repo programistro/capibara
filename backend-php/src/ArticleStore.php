@@ -217,19 +217,12 @@ class ArticleStore
         }
 
         $frontmatter = substr($raw, 3, $end - 3);
+        // $end указывает на "\n" перед закрывающим "---". Отрезаем этот перевод
+        // строки, сами три дефиса и следующий за ними перевод строки.
+        // Прежний код в ветке "\n" вычитал 2 символа вместо 5, из-за чего
+        // в тело статьи попадал огрызок "--" от закрывающего разделителя.
         $body = substr($raw, $end);
-        if (strpos($body, "\r\n") === 0) {
-            $body = substr($body, 4);
-        } elseif (strpos($body, "\n") === 0) {
-            $body = substr($body, 2);
-        }
-        if (strpos($body, "---") === 0) {
-            if (strpos($body, "\r\n") === 3) {
-                $body = substr($body, 5);
-            } elseif (strpos($body, "\n") === 3) {
-                $body = substr($body, 4);
-            }
-        }
+        $body = preg_replace('/^\R---\R/', '', $body, 1) ?? $body;
 
         $meta = [];
         foreach (preg_split('/\R/', trim($frontmatter)) as $line) {

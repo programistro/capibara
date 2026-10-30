@@ -77,13 +77,18 @@ fun AppNavGraph(startDestination: String) {
             val formState by formViewModel.uiState.collectAsStateWithLifecycle()
             val snakeState by snakeViewModel.state.collectAsStateWithLifecycle()
             val snakeGameOver by snakeViewModel.gameOver.collectAsStateWithLifecycle()
+            val snakeCoinsEarned by snakeViewModel.coinsEarned.collectAsStateWithLifecycle()
             MainScreen(
                 state = state,
                 shopState = shopState,
                 snakeState = snakeState,
                 snakeGameOver = snakeGameOver,
+                snakeCoinsEarned = snakeCoinsEarned,
                 onSnakeDirectionChange = snakeViewModel::onDirectionChange,
                 onSnakeRestart = snakeViewModel::onRestart,
+                onGameFullscreenToggle = mainViewModel::onGameFullscreenToggle,
+                onExitGameFullscreen = mainViewModel::onExitGameFullscreen,
+                onGameStart = snakeViewModel::onScreenVisible,
                 refreshNews = mainViewModel::refreshNews,
                 onDateilsNews = { article ->
                     navController.navigate(NewsDetailRoute(article.id))

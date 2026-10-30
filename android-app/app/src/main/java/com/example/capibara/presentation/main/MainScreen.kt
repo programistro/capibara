@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -95,8 +96,12 @@ fun MainScreen(
     shopState: ShopUiState,
     snakeState: SnakeState,
     snakeGameOver: GameOverResult?,
+    snakeCoinsEarned: Int,
     onSnakeDirectionChange: (SnakeDirection) -> Unit,
     onSnakeRestart: () -> Unit,
+    onGameFullscreenToggle: () -> Unit,
+    onExitGameFullscreen: () -> Unit,
+    onGameStart: () -> Unit,
     onDateilsNews: (Article) -> Unit,
     formState: ReminderFormUiState,
     onTabSelected: (MainTab) -> Unit,
@@ -119,6 +124,37 @@ fun MainScreen(
 ) {
     RequestNotificationPermission()
     val stats = state.petStats
+    val isFullscreenGame = state.selectedTab == MainTab.GAMES && state.isGameFullscreen
+
+    // Полноэкранный режим игры: рисуем только поле с заголовком и крестовиной.
+    // Шапку с капибарой и нижнее меню убираем — иначе поле остаётся зажатым
+    // в узкой карточке и места для игры почти не остаётся.
+    if (isFullscreenGame) {
+        LaunchedEffect(Unit) { onGameStart() }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(ScreenBackground)
+                .imePadding()
+        ) {
+            SnakeScreen(
+                state = snakeState,
+                gameOver = snakeGameOver,
+                onDirectionChange = onSnakeDirectionChange,
+                onRestart = onSnakeRestart,
+                earnedCoins = snakeCoinsEarned,
+                fullscreen = true,
+                onToggleFullscreen = onExitGameFullscreen,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 12.dp)
+            )
+        }
+        return
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -194,12 +230,21 @@ fun MainScreen(
                     onBackClick = onShopBackClick,
                     onClearError = onClearError
                 )
-                state.selectedTab == MainTab.GAMES -> SnakeScreen(
-                    state = snakeState,
-                    gameOver = snakeGameOver,
-                    onDirectionChange = onSnakeDirectionChange,
-                    onRestart = onSnakeRestart
-                )
+                state.selectedTab == MainTab.GAMES -> {
+                    // Игра стартует не в init ViewModel, а когда пользователь
+                    // реально открыл вкладку — иначе змейка ползла бы в фоне
+                    // на других экранах и монеты начислялись бы незаметно.
+                    LaunchedEffect(Unit) { onGameStart() }
+                    SnakeScreen(
+                        state = snakeState,
+                        gameOver = snakeGameOver,
+                        onDirectionChange = onSnakeDirectionChange,
+                        onRestart = onSnakeRestart,
+                        earnedCoins = snakeCoinsEarned,
+                        fullscreen = false,
+                        onToggleFullscreen = onGameFullscreenToggle
+                    )
+                }
                 state.selectedTab == MainTab.NEWS -> {
                     PullToRefreshBox(
                         modifier = Modifier.fillMaxSize(),
@@ -227,6 +272,10 @@ fun MainScreen(
         BottomMenu(
             selectedTab = state.selectedTab,
             onTabSelected = onTabSelected,
+            // enableEdgeToEdge() в MainActivity растягивает контент под системную
+            // панель. Без этого отступа иконки и подписи уходят под полосу жестов
+            // на устройствах с жестовой навигацией (например Samsung с Android 16).
+            modifier = Modifier.navigationBarsPadding(),
         )
     }
 }
@@ -795,8 +844,12 @@ private fun MainScreenPreview() {
                 direction = SnakeDirection.RIGHT
             ),
             snakeGameOver = null,
+            snakeCoinsEarned = 0,
             onSnakeDirectionChange = {},
             onSnakeRestart = {},
+            onGameFullscreenToggle = {},
+            onExitGameFullscreen = {},
+            onGameStart = {},
             formState = ReminderFormUiState(),
             onDateilsNews = {},
             onTabSelected = {},

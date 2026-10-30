@@ -14,5 +14,7 @@ data class MainUiState(
     val isFormOpen: Boolean = false,
     val selectedItemId: Int? = null,
     val isRefreshing: Boolean = false,
-    val newsError: String? = null
+    val newsError: String? = null,
+    /** Игра развёрнута на весь экран: скрываем шапку с капибарой и нижнее меню. */
+    val isGameFullscreen: Boolean = false
 )

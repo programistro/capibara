@@ -16,6 +16,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.capibara.domain.model.Article
+import com.example.capibara.presentation.common.MarkdownText
 import com.example.capibara.domain.model.Source
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,7 +65,13 @@ fun NewsDetailScreen(article: Article) {
                         Text(text = article.description, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        Text(text = article.content, style = MaterialTheme.typography.bodyMedium)
+                        // Контент приходит в Markdown — рендерим форматированно,
+                        // а не сырым текстом с "#" и "**".
+                        MarkdownText(
+                            markdown = article.content,
+                            modifier = Modifier.fillMaxWidth(),
+                            textColor = MaterialTheme.colorScheme.onSurface,
+                        )
                         Spacer(modifier = Modifier.height(16.dp))
 
                         HorizontalDivider() // Разделитель для технических данных

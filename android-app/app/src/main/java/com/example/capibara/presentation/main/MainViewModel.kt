@@ -74,7 +74,24 @@ class MainViewModel @Inject constructor(
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
     fun onTabSelected(index: MainTab) {
-        _uiState.update { it.copy(selectedTab = index, isFormOpen = false) }
+        _uiState.update {
+            it.copy(
+                selectedTab = index,
+                isFormOpen = false,
+                // Ушли с вкладки «Игры» — полноэкранный режим сбрасываем,
+                // иначе вернёмся и увидим игру на весь экран без меню.
+                isGameFullscreen = if (index == MainTab.GAMES) it.isGameFullscreen else false
+            )
+        }
+    }
+
+    /** Развернуть/свернуть игру на весь экран. */
+    fun onGameFullscreenToggle() {
+        _uiState.update { it.copy(isGameFullscreen = !it.isGameFullscreen) }
+    }
+
+    fun onExitGameFullscreen() {
+        _uiState.update { it.copy(isGameFullscreen = false) }
     }
 
     fun onOpenForm() {

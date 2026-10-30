@@ -19,7 +19,9 @@ import kotlin.random.Random
 class GameEngine(
     private val scope: CoroutineScope,
     private val stepDelayMillis: Long = DEFAULT_STEP_DELAY,
-    private val onGameOver: (score: Int) -> Unit = {}
+    private val onGameOver: (score: Int) -> Unit = {},
+    /** Вызывается на каждую съеденную еду. Монеты начисляем сразу, а не в конце. */
+    private val onFoodEaten: (score: Int) -> Unit = {}
 ) {
 
     private val _state = MutableStateFlow(initialState())
@@ -87,12 +89,21 @@ class GameEngine(
             listOf(newHead) + current.snake.dropLast(1)
         }
 
+        val newScore = if (hasEaten) current.score + 1 else current.score
+
         _state.value = current.copy(
             snake = newSnake,
             food = if (hasEaten) spawnFood(newSnake) else current.food,
             direction = pendingDirection,
-            score = if (hasEaten) current.score + 1 else current.score
+            score = newScore
         )
+
+        // Начисляем монеты за каждую съеденную еду сразу. Раньше награда
+        // выдавалась только в onGameOver, а игра заканчивается лишь при
+        // столкновении с собой — до этого момента очки никуда не шли.
+        if (hasEaten) {
+            onFoodEaten(newScore)
+        }
     }
 
     private fun spawnFood(snake: List<Pair<Int, Int>>): Pair<Int, Int> {
