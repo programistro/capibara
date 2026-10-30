@@ -33,8 +33,8 @@ class ShopViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            inventoryRepository.observeSelectedId().collect { ids ->
-                _uiState.update { it.copy(selectedId = ids) }
+            inventoryRepository.observeSelectedIds().collect { ids ->
+                _uiState.update { it.copy(selectedIds = ids) }
             }
         }
     }
@@ -51,8 +51,9 @@ class ShopViewModel @Inject constructor(
         }
     }
 
-    fun selectItem(item: ShopItem){
-        viewModelScope.launch { inventoryRepository.select(item.id) }
+    /** Надеть или снять предмет — комбинации разрешены. */
+    fun toggleItem(item: ShopItem) {
+        viewModelScope.launch { inventoryRepository.toggle(item.id) }
     }
 
     fun onClearError(){

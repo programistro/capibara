@@ -6,5 +6,6 @@ data class ShopUiState(
     val items: List<ShopItem> = emptyList(),
     val purchasedIds: Set<Int> = emptySet(),
     val error: String? = null,
-    val selectedId: Int? = null
+    /** Все надетые предметы — можно комбинировать. */
+    val selectedIds: Set<Int> = emptySet()
 )

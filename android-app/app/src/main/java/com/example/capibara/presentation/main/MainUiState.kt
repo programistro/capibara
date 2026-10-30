@@ -13,7 +13,8 @@ data class MainUiState(
     val news: List<Article> = emptyList(),
     val selectedTab: MainTab,
     val isFormOpen: Boolean = false,
-    val selectedItemId: Int? = null,
+    /** Все надетые предметы. Пустой набор — капибара без аксессуаров. */
+    val selectedItemIds: Set<Int> = emptySet(),
     val isRefreshing: Boolean = false,
     val newsError: String? = null,
     /** Какая игра открыта полноэкранно. null — показан список игр. */

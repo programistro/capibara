@@ -5,11 +5,13 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,7 +59,7 @@ fun ShopScreen(
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .padding(20.dp)
     ) {
         Text(
@@ -81,16 +83,19 @@ fun ShopScreen(
             columns = GridCells.Fixed(2),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.weight(1f, fill = false)
+            // fill = true обязателен: с `fill = false` сетка получает высоту
+            // первого экрана и обрезает остальные предметы каталога.
+            contentPadding = PaddingValues(bottom = 8.dp),
+            modifier = Modifier.weight(1f, fill = true)
         ) {
             items(state.items) { item ->
                 ShopItemCard(
                     item = item,
                     purchased = item.id in state.purchasedIds,
-                    selectedItem = state.selectedId,
+                    selectedIds = state.selectedIds,
                     mood = mood,
                     onBuyClick = { onBuyClick(item) },
-                    onSelectClick = { onSelectClick(item) }
+                    onToggleClick = { onSelectClick(item) }
                 )
             }
         }
@@ -107,17 +112,25 @@ private fun ShopItemCard(
     item: ShopItem,
     purchased: Boolean,
     mood: MoodLevel,
-    selectedItem: Int?,
+    selectedIds: Set<Int>,
     onBuyClick: () -> Unit,
-    onSelectClick:() -> Unit
+    onToggleClick: () -> Unit
 ) {
-    val isSelected = item.id == selectedItem
+    val isSelected = item.id in selectedIds
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
     ) {
+        // Превью показывает предмет В КОНТЕКСТЕ: если он уже надет, рисуем
+        // реальный комплект. Иначе — предмет вместе с остальной одеждой,
+        // чтобы картинка не подменяла эмоцию одиночным спрайтом.
         Image(
-            painter = painterResource(id = shopImage(item.id, mood)),
+            painter = painterResource(
+                id = PetSprite.of(
+                    itemIds = if (isSelected) selectedIds else selectedIds + item.id,
+                    mood = mood
+                )
+            ),
             contentDescription = item.name,
             modifier = Modifier.size(110.dp)
         )
@@ -143,8 +156,8 @@ private fun ShopItemCard(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Button(
-            onClick = if (purchased) onSelectClick else onBuyClick,
-            enabled = !isSelected,
+            onClick = if (purchased) onToggleClick else onBuyClick,
+            enabled = true,
             shape = RoundedCornerShape(24.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = PrimaryGreen,
@@ -159,7 +172,7 @@ private fun ShopItemCard(
             Text(
                 text = when {
                     !purchased -> "Купить"
-                    isSelected -> "Надето"
+                    isSelected -> "Снять"
                     else -> "Надеть"
                 },
                 fontSize = 18.sp
@@ -168,13 +181,12 @@ private fun ShopItemCard(
     }
 }
 
-private fun shopImage(itemId: Int, mood: MoodLevel): Int = PetSprite.of(itemId, mood)
-
 /** Человекочитаемое название настроения для подписи над витриной. */
 private fun MoodLevel.label(): String = when (this) {
     MoodLevel.CRYING -> "грустит"
     MoodLevel.NORMAL, MoodLevel.DEFAULT -> "в норме"
-    MoodLevel.HAPPY -> "счастлива"
+    MoodLevel.HAPPY -> "веселится"
+    MoodLevel.SURPRISE -> "удивлена"
 }
 
 @Preview(showBackground = true, name = "Магазин: куплено и надето")
@@ -189,7 +201,7 @@ private fun ShopScreenPreview() {
                     ShopItem(3, "Пиджак", ShopSlot.BODY, 80)
                 ),
                 purchasedIds = setOf(1, 2),
-                selectedId = 1
+                selectedIds = setOf(1)
             ),
             mood = MoodLevel.HAPPY,
             onBuyClick = {},

@@ -31,6 +31,14 @@ interface InventoryDao {
     @Query("UPDATE owned_items SET selectedItem = 1 WHERE itemId = :itemId")
     suspend fun markSelected(itemId: Int)
 
+    @Query("SELECT itemId FROM owned_items WHERE selectedItem = 1")
+    fun observeSelectedIds(): Flow<List<Int>>
+
+    /** Переключает выбранность одного предмета, не трогая остальные. */
+    @Query("UPDATE owned_items SET selectedItem = CASE WHEN selectedItem = 1 THEN 0 ELSE 1 END WHERE itemId = :itemId")
+    suspend fun toggleSelected(itemId: Int): Int
+
+    /** Оставляет ровно один предмет выбранным — используется старым экраном. */
     @Query("SELECT itemId FROM owned_items WHERE selectedItem = 1 LIMIT 1")
     fun observeSelectedId(): Flow<Int?>
 }

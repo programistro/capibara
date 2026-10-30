@@ -190,13 +190,16 @@ fun MainScreen(
             Image(
                 painter = painterResource(
                     id = PetSprite.of(
-                        itemId = state.selectedItemId,
+                        itemIds = state.selectedItemIds,
                         mood = MoodLevel.from(stats?.moodScore ?: 50)
                     )
                 ),
                 contentDescription = "Капибара",
+                // Спрайт вытянут по вертикали (89x137 против квадрата):
+                // задаём высоту, чтобы капибара занимала сцену целиком.
+                contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .size(220.dp)
+                    .height(300.dp)
                     .align(Alignment.BottomCenter)
             )
             if (stats != null) {

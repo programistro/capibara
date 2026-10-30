@@ -21,8 +21,11 @@ class InventoryRepositoryImpl @Inject constructor(
         dao.insert(OwnedItemEntity(itemId = itemId))
     }
 
-    override fun observeSelectedId(): Flow<Int?> {
-        return dao.observeSelectedId()
+    override fun observeSelectedIds(): Flow<Set<Int>> =
+        dao.observeSelectedIds().map { it.toSet() }
+
+    override suspend fun toggle(itemId: Int) {
+        dao.toggleSelected(itemId)
     }
 
     override suspend fun select(itemId: Int) {

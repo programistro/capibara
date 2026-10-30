@@ -58,8 +58,8 @@ class MainViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            inventoryRepository.observeSelectedId().collect { item ->
-                _uiState.update { it.copy(selectedItemId = item) }
+            inventoryRepository.observeSelectedIds().collect { items ->
+                _uiState.update { it.copy(selectedItemIds = items) }
             }
         }
 

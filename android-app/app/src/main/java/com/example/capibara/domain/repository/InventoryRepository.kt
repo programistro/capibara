@@ -6,6 +6,12 @@ interface InventoryRepository {
     fun observeOwnedIds(): Flow<Set<Int>>
     suspend fun isOwned(itemId: Int): Boolean
     suspend fun markOwned(itemId: Int)
-    fun observeSelectedId(): Flow<Int?>
+    /** Все надетые предметы. Пустой набор — капибара без аксессуаров. */
+    fun observeSelectedIds(): Flow<Set<Int>>
+
+    /** Надеть/снять предмет, не трогая остальные. */
+    suspend fun toggle(itemId: Int)
+
+    /** Надеть предмет, сняв все остальные. */
     suspend fun select(itemId: Int)
 }
