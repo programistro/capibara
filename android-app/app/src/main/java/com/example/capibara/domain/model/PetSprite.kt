@@ -20,6 +20,10 @@ import com.example.capibara.R
  * Порядок предметов в имени фиксированный, см. [CANONICAL_ORDER].
  *
  * Эмоции: `happy`, `norm`, `cry`, `surprise`.
+ *
+ * Сейчас в каталоге 88 картинок: 26 комплектов (4 базовых + 9 одиночных
+ * предметов + 13 сочетаний) и одиночные предметы в `surprise`. Остальные
+ * сочетания откатываются к частичному комплекту через [fallback].
  */
 object PetSprite {
 
@@ -33,7 +37,8 @@ object PetSprite {
     @DrawableRes
     fun of(itemIds: Collection<Int>, mood: MoodLevel): Int {
         val keys = accessoriesOf(itemIds)
-        return lookup(keys, mood) ?: fallback(keys, mood)
+        val exact = lookup(keys, mood)
+        return if (exact != null) resource(exact) else fallback(keys, mood)
     }
 
     /** Спрайт одного предмета в эмоции [mood]. */
@@ -42,7 +47,10 @@ object PetSprite {
 
     /** Капибара без одежды в эмоции [mood]. */
     @DrawableRes
-    fun base(mood: MoodLevel): Int = lookup(emptyList(), mood) ?: lookup(emptyList(), MoodLevel.NORMAL)!!
+    fun base(mood: MoodLevel): Int {
+        val exact = lookup(emptyList(), mood) ?: lookup(emptyList(), MoodLevel.NORMAL)
+        return resource(exact ?: NORMAL_BASE)
+    }
 
     /**
      * Ключи предметов в каноническом порядке.
@@ -59,6 +67,16 @@ object PetSprite {
     fun hasExact(itemIds: Collection<Int>, mood: MoodLevel): Boolean =
         lookup(accessoriesOf(itemIds), mood) != null
 
+    /** Ключ комплекта в имени файла (`norm` — без одежды). */
+    internal fun keyOf(itemIds: Collection<Int>): String {
+        val keys = accessoriesOf(itemIds)
+        return if (keys.isEmpty()) NO_CLOTHES else keys.joinToString("_")
+    }
+
+    /** Имя drawable для набора предметов и эмоции — без фолбэка. */
+    internal fun exactName(itemIds: Collection<Int>, mood: MoodLevel): String? =
+        lookup(accessoriesOf(itemIds), mood)
+
     // ---------- Внутреннее ----------
 
     /**
@@ -72,23 +90,38 @@ object PetSprite {
     @DrawableRes
     private fun fallback(keys: List<String>, mood: MoodLevel): Int {
         for (size in keys.size - 1 downTo 0) {
-            lookup(keys.take(size), mood)?.let { return it }
+            lookup(keys.take(size), mood)?.let { return resource(it) }
         }
         // Совсем нет картинки для этой эмоции — берём нормальное настроение.
         for (size in keys.size downTo 0) {
-            lookup(keys.take(size), MoodLevel.NORMAL)?.let { return it }
+            lookup(keys.take(size), MoodLevel.NORMAL)?.let { return resource(it) }
         }
-        return R.drawable.pet_norm_norm
+        return resource(NORMAL_BASE)
     }
 
-    @DrawableRes
-    private fun lookup(keys: List<String>, mood: MoodLevel): Int? {
+    private fun lookup(keys: List<String>, mood: MoodLevel): String? {
         val key = if (keys.isEmpty()) NO_CLOTHES else keys.joinToString("_")
         return COMBINATIONS[key]?.get(mood.code)
     }
 
+    /**
+     * Имена -> ресурсы один раз при первом обращении.
+     *
+     * Лениво: в JVM-тестах картинки не рисуются, и `R` с id не нужен.
+     */
+    private val RESOURCES: Map<String, Int> by lazy {
+        val names = COMBINATIONS.values.flatMap { it.values }.toSet() + NORMAL_BASE
+        names.associateWith { name -> drawableByName(name) }
+    }
+
+    @DrawableRes
+    private fun resource(name: String): Int = RESOURCES.getValue(name)
+
     /** Ключ комплекта без одежды. Совпадает с именем файла `norm_<эмоция>`. */
     private const val NO_CLOTHES = "norm"
+
+    /** Последний рубеж: спокойная капибара без одежды. */
+    private const val NORMAL_BASE = "pet_norm_norm"
 
     /** id предмета в магазине -> ключ в имени файла. */
     private val ID_TO_KEY: Map<Int, String> = mapOf(
@@ -112,156 +145,255 @@ object PetSprite {
     /** Все предметы магазина, для которых есть спрайты. */
     val ACCESSORY_IDS: List<Int> = ID_TO_KEY.keys.sorted()
 
-    /** Комплект -> эмоция -> ресурс. Ровно то, что есть в `cells/`. */
-    private val COMBINATIONS: Map<String, Map<String, Int>> = mapOf(
+    /**
+     * Комплект -> эмоция -> имя drawable (без префикса `pet_`).
+     *
+     * Храним имена, а не `R.drawable.*`: в JVM-тестах `R` — заглушка, все
+     * `R.drawable.pet_*` равны нулю, и проверка «картинки разные» на нём врёт.
+     * Ресурс достаётся через [resource] уже на устройстве.
+     */
+    private val COMBINATIONS: Map<String, Map<String, String>> = mapOf(
         // Без одежды — во всех четырёх эмоциях
         "norm" to mapOf(
-            "happy" to R.drawable.pet_norm_happy,
-            "norm" to R.drawable.pet_norm_norm,
-            "cry" to R.drawable.pet_norm_cry,
-            "surprise" to R.drawable.pet_norm_surprise
+            "happy" to "pet_norm_happy",
+            "norm" to "pet_norm_norm",
+            "cry" to "pet_norm_cry",
+            "surprise" to "pet_norm_surprise"
         ),
 
         // --- Одиночные предметы: 9 штук, все четыре эмоции ---
         "hat_1" to mapOf(
-            "happy" to R.drawable.pet_hat_1_happy,
-            "norm" to R.drawable.pet_hat_1_norm,
-            "cry" to R.drawable.pet_hat_1_cry,
-            "surprise" to R.drawable.pet_hat_1_surprise
+            "happy" to "pet_hat_1_happy",
+            "norm" to "pet_hat_1_norm",
+            "cry" to "pet_hat_1_cry",
+            "surprise" to "pet_hat_1_surprise"
         ),
         "hat_2" to mapOf(
-            "happy" to R.drawable.pet_hat_2_happy,
-            "norm" to R.drawable.pet_hat_2_norm,
-            "cry" to R.drawable.pet_hat_2_cry,
-            "surprise" to R.drawable.pet_hat_2_surprise
+            "happy" to "pet_hat_2_happy",
+            "norm" to "pet_hat_2_norm",
+            "cry" to "pet_hat_2_cry",
+            "surprise" to "pet_hat_2_surprise"
         ),
         "cap" to mapOf(
-            "happy" to R.drawable.pet_cap_happy,
-            "norm" to R.drawable.pet_cap_norm,
-            "cry" to R.drawable.pet_cap_cry,
-            "surprise" to R.drawable.pet_cap_surprise
+            "happy" to "pet_cap_happy",
+            "norm" to "pet_cap_norm",
+            "cry" to "pet_cap_cry",
+            "surprise" to "pet_cap_surprise"
         ),
         "glasses_1" to mapOf(
-            "happy" to R.drawable.pet_glasses_1_happy,
-            "norm" to R.drawable.pet_glasses_1_norm,
-            "cry" to R.drawable.pet_glasses_1_cry,
-            "surprise" to R.drawable.pet_glasses_1_surprise
+            "happy" to "pet_glasses_1_happy",
+            "norm" to "pet_glasses_1_norm",
+            "cry" to "pet_glasses_1_cry",
+            "surprise" to "pet_glasses_1_surprise"
         ),
         "glasses_2" to mapOf(
-            "happy" to R.drawable.pet_glasses_2_happy,
-            "norm" to R.drawable.pet_glasses_2_norm,
-            "cry" to R.drawable.pet_glasses_2_cry,
-            "surprise" to R.drawable.pet_glasses_2_surprise
+            "happy" to "pet_glasses_2_happy",
+            "norm" to "pet_glasses_2_norm",
+            "cry" to "pet_glasses_2_cry",
+            "surprise" to "pet_glasses_2_surprise"
         ),
         "headband" to mapOf(
-            "happy" to R.drawable.pet_headband_happy,
-            "norm" to R.drawable.pet_headband_norm,
-            "cry" to R.drawable.pet_headband_cry,
-            "surprise" to R.drawable.pet_headband_surprise
+            "happy" to "pet_headband_happy",
+            "norm" to "pet_headband_norm",
+            "cry" to "pet_headband_cry",
+            "surprise" to "pet_headband_surprise"
         ),
         "bow" to mapOf(
-            "happy" to R.drawable.pet_bow_happy,
-            "norm" to R.drawable.pet_bow_norm,
-            "cry" to R.drawable.pet_bow_cry,
-            "surprise" to R.drawable.pet_bow_surprise
+            "happy" to "pet_bow_happy",
+            "norm" to "pet_bow_norm",
+            "cry" to "pet_bow_cry",
+            "surprise" to "pet_bow_surprise"
         ),
         "scarf" to mapOf(
-            "happy" to R.drawable.pet_scarf_happy,
-            "norm" to R.drawable.pet_scarf_norm,
-            "cry" to R.drawable.pet_scarf_cry,
-            "surprise" to R.drawable.pet_scarf_surprise
+            "happy" to "pet_scarf_happy",
+            "norm" to "pet_scarf_norm",
+            "cry" to "pet_scarf_cry",
+            "surprise" to "pet_scarf_surprise"
         ),
         "jacket" to mapOf(
-            "happy" to R.drawable.pet_jacket_happy,
-            "norm" to R.drawable.pet_jacket_norm,
-            "cry" to R.drawable.pet_jacket_cry,
-            "surprise" to R.drawable.pet_jacket_surprise
+            "happy" to "pet_jacket_happy",
+            "norm" to "pet_jacket_norm",
+            "cry" to "pet_jacket_cry",
+            "surprise" to "pet_jacket_surprise"
         ),
 
         // --- Пары: только happy / norm / cry ---
         "cap_bow" to mapOf(
-            "happy" to R.drawable.pet_cap_bow_happy,
-            "norm" to R.drawable.pet_cap_bow_norm,
-            "cry" to R.drawable.pet_cap_bow_cry
+            "happy" to "pet_cap_bow_happy",
+            "norm" to "pet_cap_bow_norm",
+            "cry" to "pet_cap_bow_cry"
         ),
         "cap_jacket" to mapOf(
-            "happy" to R.drawable.pet_cap_jacket_happy,
-            "norm" to R.drawable.pet_cap_jacket_norm,
-            "cry" to R.drawable.pet_cap_jacket_cry
+            "happy" to "pet_cap_jacket_happy",
+            "norm" to "pet_cap_jacket_norm",
+            "cry" to "pet_cap_jacket_cry"
         ),
         "cap_scarf" to mapOf(
-            "happy" to R.drawable.pet_cap_scarf_happy,
-            "norm" to R.drawable.pet_cap_scarf_norm,
-            "cry" to R.drawable.pet_cap_scarf_cry
+            "happy" to "pet_cap_scarf_happy",
+            "norm" to "pet_cap_scarf_norm",
+            "cry" to "pet_cap_scarf_cry"
         ),
         "glasses_1_jacket" to mapOf(
-            "happy" to R.drawable.pet_glasses_1_jacket_happy,
-            "norm" to R.drawable.pet_glasses_1_jacket_norm,
-            "cry" to R.drawable.pet_glasses_1_jacket_cry
+            "happy" to "pet_glasses_1_jacket_happy",
+            "norm" to "pet_glasses_1_jacket_norm",
+            "cry" to "pet_glasses_1_jacket_cry"
         ),
         "glasses_2_jacket" to mapOf(
-            "happy" to R.drawable.pet_glasses_2_jacket_happy,
-            "norm" to R.drawable.pet_glasses_2_jacket_norm,
-            "cry" to R.drawable.pet_glasses_2_jacket_cry
+            "happy" to "pet_glasses_2_jacket_happy",
+            "norm" to "pet_glasses_2_jacket_norm",
+            "cry" to "pet_glasses_2_jacket_cry"
         ),
         "glasses_2_scarf" to mapOf(
-            "happy" to R.drawable.pet_glasses_2_scarf_happy,
-            "norm" to R.drawable.pet_glasses_2_scarf_norm,
-            "cry" to R.drawable.pet_glasses_2_scarf_cry
+            "happy" to "pet_glasses_2_scarf_happy",
+            "norm" to "pet_glasses_2_scarf_norm",
+            "cry" to "pet_glasses_2_scarf_cry"
         ),
         "hat_1_jacket" to mapOf(
-            "happy" to R.drawable.pet_hat_1_jacket_happy,
-            "norm" to R.drawable.pet_hat_1_jacket_norm,
-            "cry" to R.drawable.pet_hat_1_jacket_cry
+            "happy" to "pet_hat_1_jacket_happy",
+            "norm" to "pet_hat_1_jacket_norm",
+            "cry" to "pet_hat_1_jacket_cry"
         ),
         "hat_1_scarf" to mapOf(
-            "happy" to R.drawable.pet_hat_1_scarf_happy,
-            "norm" to R.drawable.pet_hat_1_scarf_norm,
-            "cry" to R.drawable.pet_hat_1_scarf_cry
+            "happy" to "pet_hat_1_scarf_happy",
+            "norm" to "pet_hat_1_scarf_norm",
+            "cry" to "pet_hat_1_scarf_cry"
         ),
         "hat_2_jacket" to mapOf(
-            "happy" to R.drawable.pet_hat_2_jacket_happy,
-            "norm" to R.drawable.pet_hat_2_jacket_norm,
-            "cry" to R.drawable.pet_hat_2_jacket_cry
+            "happy" to "pet_hat_2_jacket_happy",
+            "norm" to "pet_hat_2_jacket_norm",
+            "cry" to "pet_hat_2_jacket_cry"
         ),
         "hat_2_scarf" to mapOf(
-            "happy" to R.drawable.pet_hat_2_scarf_happy,
-            "norm" to R.drawable.pet_hat_2_scarf_norm,
-            "cry" to R.drawable.pet_hat_2_scarf_cry
+            "happy" to "pet_hat_2_scarf_happy",
+            "norm" to "pet_hat_2_scarf_norm",
+            "cry" to "pet_hat_2_scarf_cry"
         ),
 
         // --- Тройки и четвёрки ---
         "cap_glasses_1_jacket" to mapOf(
-            "happy" to R.drawable.pet_cap_glasses_1_jacket_happy,
-            "norm" to R.drawable.pet_cap_glasses_1_jacket_norm,
-            "cry" to R.drawable.pet_cap_glasses_1_jacket_cry
+            "happy" to "pet_cap_glasses_1_jacket_happy",
+            "norm" to "pet_cap_glasses_1_jacket_norm",
+            "cry" to "pet_cap_glasses_1_jacket_cry"
         ),
         "cap_glasses_1_scarf" to mapOf(
-            "happy" to R.drawable.pet_cap_glasses_1_scarf_happy,
-            "norm" to R.drawable.pet_cap_glasses_1_scarf_norm,
-            "cry" to R.drawable.pet_cap_glasses_1_scarf_cry
+            "happy" to "pet_cap_glasses_1_scarf_happy",
+            "norm" to "pet_cap_glasses_1_scarf_norm",
+            "cry" to "pet_cap_glasses_1_scarf_cry"
         ),
         "hat_1_glasses_2_jacket" to mapOf(
-            "happy" to R.drawable.pet_hat_1_glasses_2_jacket_happy,
-            "norm" to R.drawable.pet_hat_1_glasses_2_jacket_norm,
-            "cry" to R.drawable.pet_hat_1_glasses_2_jacket_cry
+            "happy" to "pet_hat_1_glasses_2_jacket_happy",
+            "norm" to "pet_hat_1_glasses_2_jacket_norm",
+            "cry" to "pet_hat_1_glasses_2_jacket_cry"
         ),
         "hat_1_glasses_2_scarf" to mapOf(
-            "happy" to R.drawable.pet_hat_1_glasses_2_scarf_happy,
-            "norm" to R.drawable.pet_hat_1_glasses_2_scarf_norm,
-            "cry" to R.drawable.pet_hat_1_glasses_2_scarf_cry
+            "happy" to "pet_hat_1_glasses_2_scarf_happy",
+            "norm" to "pet_hat_1_glasses_2_scarf_norm",
+            "cry" to "pet_hat_1_glasses_2_scarf_cry"
         ),
         "hat_2_glasses_1_jacket" to mapOf(
-            "happy" to R.drawable.pet_hat_2_glasses_1_jacket_happy,
-            "norm" to R.drawable.pet_hat_2_glasses_1_jacket_norm,
-            "cry" to R.drawable.pet_hat_2_glasses_1_jacket_cry
+            "happy" to "pet_hat_2_glasses_1_jacket_happy",
+            "norm" to "pet_hat_2_glasses_1_jacket_norm",
+            "cry" to "pet_hat_2_glasses_1_jacket_cry"
         ),
         "headband_glasses_2_jacket" to mapOf(
-            "happy" to R.drawable.pet_headband_glasses_2_jacket_happy,
-            "norm" to R.drawable.pet_headband_glasses_2_jacket_norm,
-            "cry" to R.drawable.pet_headband_glasses_2_jacket_cry
+            "happy" to "pet_headband_glasses_2_jacket_happy",
+            "norm" to "pet_headband_glasses_2_jacket_norm",
+            "cry" to "pet_headband_glasses_2_jacket_cry"
         )
     )
+}
+
+/** Имя drawable -> id ресурса. Единственное место, где живёт `R.drawable.*`. */
+private fun drawableByName(name: String): Int = when (name) {
+    "pet_norm_happy" -> R.drawable.pet_norm_happy
+    "pet_norm_norm" -> R.drawable.pet_norm_norm
+    "pet_norm_cry" -> R.drawable.pet_norm_cry
+    "pet_norm_surprise" -> R.drawable.pet_norm_surprise
+    "pet_hat_1_happy" -> R.drawable.pet_hat_1_happy
+    "pet_hat_1_norm" -> R.drawable.pet_hat_1_norm
+    "pet_hat_1_cry" -> R.drawable.pet_hat_1_cry
+    "pet_hat_1_surprise" -> R.drawable.pet_hat_1_surprise
+    "pet_hat_2_happy" -> R.drawable.pet_hat_2_happy
+    "pet_hat_2_norm" -> R.drawable.pet_hat_2_norm
+    "pet_hat_2_cry" -> R.drawable.pet_hat_2_cry
+    "pet_hat_2_surprise" -> R.drawable.pet_hat_2_surprise
+    "pet_cap_happy" -> R.drawable.pet_cap_happy
+    "pet_cap_norm" -> R.drawable.pet_cap_norm
+    "pet_cap_cry" -> R.drawable.pet_cap_cry
+    "pet_cap_surprise" -> R.drawable.pet_cap_surprise
+    "pet_glasses_1_happy" -> R.drawable.pet_glasses_1_happy
+    "pet_glasses_1_norm" -> R.drawable.pet_glasses_1_norm
+    "pet_glasses_1_cry" -> R.drawable.pet_glasses_1_cry
+    "pet_glasses_1_surprise" -> R.drawable.pet_glasses_1_surprise
+    "pet_glasses_2_happy" -> R.drawable.pet_glasses_2_happy
+    "pet_glasses_2_norm" -> R.drawable.pet_glasses_2_norm
+    "pet_glasses_2_cry" -> R.drawable.pet_glasses_2_cry
+    "pet_glasses_2_surprise" -> R.drawable.pet_glasses_2_surprise
+    "pet_headband_happy" -> R.drawable.pet_headband_happy
+    "pet_headband_norm" -> R.drawable.pet_headband_norm
+    "pet_headband_cry" -> R.drawable.pet_headband_cry
+    "pet_headband_surprise" -> R.drawable.pet_headband_surprise
+    "pet_bow_happy" -> R.drawable.pet_bow_happy
+    "pet_bow_norm" -> R.drawable.pet_bow_norm
+    "pet_bow_cry" -> R.drawable.pet_bow_cry
+    "pet_bow_surprise" -> R.drawable.pet_bow_surprise
+    "pet_scarf_happy" -> R.drawable.pet_scarf_happy
+    "pet_scarf_norm" -> R.drawable.pet_scarf_norm
+    "pet_scarf_cry" -> R.drawable.pet_scarf_cry
+    "pet_scarf_surprise" -> R.drawable.pet_scarf_surprise
+    "pet_jacket_happy" -> R.drawable.pet_jacket_happy
+    "pet_jacket_norm" -> R.drawable.pet_jacket_norm
+    "pet_jacket_cry" -> R.drawable.pet_jacket_cry
+    "pet_jacket_surprise" -> R.drawable.pet_jacket_surprise
+    "pet_cap_bow_happy" -> R.drawable.pet_cap_bow_happy
+    "pet_cap_bow_norm" -> R.drawable.pet_cap_bow_norm
+    "pet_cap_bow_cry" -> R.drawable.pet_cap_bow_cry
+    "pet_cap_jacket_happy" -> R.drawable.pet_cap_jacket_happy
+    "pet_cap_jacket_norm" -> R.drawable.pet_cap_jacket_norm
+    "pet_cap_jacket_cry" -> R.drawable.pet_cap_jacket_cry
+    "pet_cap_scarf_happy" -> R.drawable.pet_cap_scarf_happy
+    "pet_cap_scarf_norm" -> R.drawable.pet_cap_scarf_norm
+    "pet_cap_scarf_cry" -> R.drawable.pet_cap_scarf_cry
+    "pet_glasses_1_jacket_happy" -> R.drawable.pet_glasses_1_jacket_happy
+    "pet_glasses_1_jacket_norm" -> R.drawable.pet_glasses_1_jacket_norm
+    "pet_glasses_1_jacket_cry" -> R.drawable.pet_glasses_1_jacket_cry
+    "pet_glasses_2_jacket_happy" -> R.drawable.pet_glasses_2_jacket_happy
+    "pet_glasses_2_jacket_norm" -> R.drawable.pet_glasses_2_jacket_norm
+    "pet_glasses_2_jacket_cry" -> R.drawable.pet_glasses_2_jacket_cry
+    "pet_glasses_2_scarf_happy" -> R.drawable.pet_glasses_2_scarf_happy
+    "pet_glasses_2_scarf_norm" -> R.drawable.pet_glasses_2_scarf_norm
+    "pet_glasses_2_scarf_cry" -> R.drawable.pet_glasses_2_scarf_cry
+    "pet_hat_1_jacket_happy" -> R.drawable.pet_hat_1_jacket_happy
+    "pet_hat_1_jacket_norm" -> R.drawable.pet_hat_1_jacket_norm
+    "pet_hat_1_jacket_cry" -> R.drawable.pet_hat_1_jacket_cry
+    "pet_hat_1_scarf_happy" -> R.drawable.pet_hat_1_scarf_happy
+    "pet_hat_1_scarf_norm" -> R.drawable.pet_hat_1_scarf_norm
+    "pet_hat_1_scarf_cry" -> R.drawable.pet_hat_1_scarf_cry
+    "pet_hat_2_jacket_happy" -> R.drawable.pet_hat_2_jacket_happy
+    "pet_hat_2_jacket_norm" -> R.drawable.pet_hat_2_jacket_norm
+    "pet_hat_2_jacket_cry" -> R.drawable.pet_hat_2_jacket_cry
+    "pet_hat_2_scarf_happy" -> R.drawable.pet_hat_2_scarf_happy
+    "pet_hat_2_scarf_norm" -> R.drawable.pet_hat_2_scarf_norm
+    "pet_hat_2_scarf_cry" -> R.drawable.pet_hat_2_scarf_cry
+    "pet_cap_glasses_1_jacket_happy" -> R.drawable.pet_cap_glasses_1_jacket_happy
+    "pet_cap_glasses_1_jacket_norm" -> R.drawable.pet_cap_glasses_1_jacket_norm
+    "pet_cap_glasses_1_jacket_cry" -> R.drawable.pet_cap_glasses_1_jacket_cry
+    "pet_cap_glasses_1_scarf_happy" -> R.drawable.pet_cap_glasses_1_scarf_happy
+    "pet_cap_glasses_1_scarf_norm" -> R.drawable.pet_cap_glasses_1_scarf_norm
+    "pet_cap_glasses_1_scarf_cry" -> R.drawable.pet_cap_glasses_1_scarf_cry
+    "pet_hat_1_glasses_2_jacket_happy" -> R.drawable.pet_hat_1_glasses_2_jacket_happy
+    "pet_hat_1_glasses_2_jacket_norm" -> R.drawable.pet_hat_1_glasses_2_jacket_norm
+    "pet_hat_1_glasses_2_jacket_cry" -> R.drawable.pet_hat_1_glasses_2_jacket_cry
+    "pet_hat_1_glasses_2_scarf_happy" -> R.drawable.pet_hat_1_glasses_2_scarf_happy
+    "pet_hat_1_glasses_2_scarf_norm" -> R.drawable.pet_hat_1_glasses_2_scarf_norm
+    "pet_hat_1_glasses_2_scarf_cry" -> R.drawable.pet_hat_1_glasses_2_scarf_cry
+    "pet_hat_2_glasses_1_jacket_happy" -> R.drawable.pet_hat_2_glasses_1_jacket_happy
+    "pet_hat_2_glasses_1_jacket_norm" -> R.drawable.pet_hat_2_glasses_1_jacket_norm
+    "pet_hat_2_glasses_1_jacket_cry" -> R.drawable.pet_hat_2_glasses_1_jacket_cry
+    "pet_headband_glasses_2_jacket_happy" -> R.drawable.pet_headband_glasses_2_jacket_happy
+    "pet_headband_glasses_2_jacket_norm" -> R.drawable.pet_headband_glasses_2_jacket_norm
+    "pet_headband_glasses_2_jacket_cry" -> R.drawable.pet_headband_glasses_2_jacket_cry
+    else -> error("нет ресурса для спрайта $name")
 }
 
 /** Код эмоции в имени файла. */

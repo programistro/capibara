@@ -241,4 +241,25 @@ class DinoGameStateTest {
 
         assertFalse("игра должна продолжаться после нескольких кактусов", game.isGameOver)
     }
+
+    @Test
+    fun `конструктор не падает до получения ширины экрана`() {
+        // Краш на устройстве: DinoGameState() создавался навигацией до того,
+        // как Canvas вызывал configure(), и initClouds() бросал
+        // IllegalArgumentException при deviceWidth = 0.
+        val game = DinoGameState()
+
+        assertEquals(DinoWorld.MAX_CLOUDS, game.clouds.size)
+        game.step()
+        assertEquals("без ширины мир не должен шагать", 0, game.currentScore)
+    }
+
+    @Test
+    fun `restart без configure тоже безопасен`() {
+        val game = DinoGameState()
+        game.restart()
+
+        assertEquals(DinoWorld.MAX_CLOUDS, game.clouds.size)
+        assertEquals(1, game.generation)
+    }
 }

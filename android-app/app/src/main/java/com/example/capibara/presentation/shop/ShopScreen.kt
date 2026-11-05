@@ -32,9 +32,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.capibara.R
 import com.example.capibara.domain.model.MoodLevel
-import com.example.capibara.domain.model.PetSprite
 import com.example.capibara.domain.model.ShopItem
 import com.example.capibara.domain.model.ShopSlot
+import com.example.capibara.domain.model.previewSprite
 import com.example.capibara.presentation.common.GreenButton
 import com.example.capibara.ui.theme.CapibaraTheme
 import com.example.capibara.ui.theme.PrimaryGreen
@@ -121,15 +121,13 @@ private fun ShopItemCard(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
     ) {
-        // Превью показывает предмет В КОНТЕКСТЕ: если он уже надет, рисуем
-        // реальный комплект. Иначе — предмет вместе с остальной одеждой,
-        // чтобы картинка не подменяла эмоцию одиночным спрайтом.
+        // Превью показывает предмет в контексте надетого, но так, чтобы
+        // карточка не повторила соседнюю: при надетых «цилиндр + пиджак»
+        // любая третья вещь сворачивалась к этой же картинке, и вся витрина
+        // показывала один и тот же спрайт. Логика — в previewSprite (SpritePreview.kt).
         Image(
             painter = painterResource(
-                id = PetSprite.of(
-                    itemIds = if (isSelected) selectedIds else selectedIds + item.id,
-                    mood = mood
-                )
+                id = previewSprite(item.id, selectedIds, mood)
             ),
             contentDescription = item.name,
             modifier = Modifier.size(110.dp)
@@ -181,6 +179,18 @@ private fun ShopItemCard(
     }
 }
 
+/**
+ * Картинка для карточки магазина.
+ *
+ * Варианты по убыванию полезности:
+ * 1. «Надетое + этот предмет» — идеально, но есть не для всех сочетаний;
+ * 2. сам предмет надет в реале ([isSelected]) — рисуем реальный комплект;
+ * 3. сам предмет один — карточки никогда не должны совпадать с чужими.
+ *
+ * Предмет обязан отличаться от остальных: при выборе между «комплектом
+ * с этим предметом» и «одиночным предметом» сравниваем их ключи, а не
+ * drawable id — в JVM-тестах и превью id может быть нулевым.
+ */
 /** Человекочитаемое название настроения для подписи над витриной. */
 private fun MoodLevel.label(): String = when (this) {
     MoodLevel.CRYING -> "грустит"

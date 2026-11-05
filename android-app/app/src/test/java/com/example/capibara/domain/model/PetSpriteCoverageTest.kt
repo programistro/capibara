@@ -18,6 +18,11 @@ class PetSpriteCoverageTest {
         java.io.File("../cells")
     ).firstOrNull { it.isDirectory }
 
+    private val drawableDir = listOf(
+        java.io.File("app/src/main/res/drawable"),
+        java.io.File("src/main/res/drawable")
+    ).firstOrNull { it.isDirectory }
+
     private val moodFolderToCode = mapOf(
         "веселая" to "happy",
         "грустная" to "cry",
@@ -65,6 +70,26 @@ class PetSpriteCoverageTest {
 
         assertTrue("в карте не хватает спрайтов: $missing", missing.isEmpty())
         assertTrue("каталог должен содержать 26 комплектов", combos.size == 26)
+    }
+
+    @Test
+    fun `каждый спрайт каталога скопирован в res drawable`() {
+        // Без этой проверки карта может ссылаться на несуществующий ресурс:
+        // сборка упадёт, но тест останется зелёным. Именно так «пропавшие»
+        // спрайты доживали до устройства.
+        val dir = assertNotNull("каталог res/drawable не найден", drawableDir).let { drawableDir!! }
+        val (_, byCombo) = catalog()
+        val missing = mutableListOf<String>()
+        byCombo.forEach { (combo, moods) ->
+            moods.forEach { code ->
+                val expected = "pet_${combo}_${code}.png"
+                if (!java.io.File(dir, expected).isFile) missing.add(expected)
+            }
+        }
+        val expectedCount = byCombo.values.sumOf { it.size }
+        val actual = dir.listFiles { f -> f.name.startsWith("pet_") && f.extension == "png" }.orEmpty()
+        assertTrue("в res/drawable не хватает: $missing", missing.isEmpty())
+        assertEquals("лишние файлы в res/drawable", expectedCount, actual.size)
     }
 
     @Test
