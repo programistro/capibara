@@ -83,10 +83,15 @@ fun DinoGameScreen(
 
     // Ключ — номер партии: при рестарте эффект перезапускается заново.
     LaunchedEffect(generation) {
+        var lastFrame = 0L
         while (true) {
             // Ждём кадр и шагаем состоянием. Цикл выходим, когда игра кончилась.
-            withFrameNanos { _ ->
-                state.update()
+            withFrameNanos { frameTime ->
+                // Время кадра, а не один шаг: на 120 Гц кактусы двигались бы
+                // вдвое быстрее, чем на 60 Гц, и прыжок не попадал бы.
+                val elapsed = if (lastFrame == 0L) 0L else frameTime - lastFrame
+                lastFrame = frameTime
+                state.update(elapsed)
                 frameTick++
                 score = state.currentScore
                 if (state.isGameOver) {
