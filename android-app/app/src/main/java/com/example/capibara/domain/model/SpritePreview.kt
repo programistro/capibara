@@ -5,9 +5,12 @@ import androidx.annotation.DrawableRes
 /**
  * Имя drawable карточки магазина — по умолчанию то, что вернул бы
  * [PetSprite.of]. Отдельно от `R.drawable`, чтобы проверять превью
- * в JVM-тестах, где `R` — заглушка.
+ * в JVM-тестах, где `R` — заглушка. Фоны и скины в [PetSprite] не входят
+ * и возвращают имя своей картинки.
  */
 fun previewSpriteName(itemId: Int, selectedIds: Set<Int>, mood: MoodLevel): String {
+    if (BackgroundSprite.isBackground(itemId)) return BackgroundSprite.nameOf(itemId)
+    SkinSprite.nameOf(itemId)?.let { return it }
     val isSelected = itemId in selectedIds
     if (!isSelected) {
         val withItem = selectedIds + itemId
@@ -25,7 +28,9 @@ fun previewSpriteName(itemId: Int, selectedIds: Set<Int>, mood: MoodLevel): Stri
 /** Спрайт карточки магазина: то же решение, что в [previewSpriteName]. */
 @DrawableRes
 fun previewSprite(itemId: Int, selectedIds: Set<Int>, mood: MoodLevel): Int =
-    PetSprite.of(
+    if (BackgroundSprite.isBackground(itemId)) {
+        BackgroundSprite.drawable(itemId)
+    } else SkinSprite.drawable(itemId) ?: PetSprite.of(
         itemIds = if (itemId in selectedIds || PetSprite.hasExact(selectedIds + itemId, mood)) {
             selectedIds + itemId
         } else {

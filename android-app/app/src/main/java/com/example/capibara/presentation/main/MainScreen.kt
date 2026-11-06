@@ -42,6 +42,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -67,6 +68,7 @@ import androidx.core.content.ContextCompat
 import com.example.capibara.R
 import com.example.capibara.domain.model.PetSprite
 import com.example.capibara.domain.model.PetStats
+import com.example.capibara.domain.usecase.GetShopItemsUseCase
 import com.example.capibara.domain.model.ShopItem
 import com.example.capibara.domain.game.SnakeDirection
 import com.example.capibara.domain.game.SnakeState
@@ -117,7 +119,12 @@ fun MainScreen(
     onBuyClick: (ShopItem) -> Unit,
     onSelectClick: (ShopItem) -> Unit,
     onShopBackClick: () -> Unit,
+    /** Купленный фон, который сейчас висит за капибарой. */
+    @DrawableRes backgroundRes: Int,
+    /** Спрайт надетого скина; null — обычная капибара. */
+    @DrawableRes skinRes: Int?,
     onClearError: () -> Unit,
+    onCheatClick: () -> Unit,
     onFormTitleChange: (String) -> Unit,
     onFormDateChange: (String) -> Unit,
     onFormTimeChange: (String) -> Unit,
@@ -181,19 +188,22 @@ fun MainScreen(
                 .fillMaxWidth()
                 .height(330.dp)
         ) {
+            // Фон покупается в магазине, поэтому id берётся из состояния,
+            // а не из R.drawable напрямую.
             Image(
-                painter = painterResource(id = R.drawable.new_background),
+                painter = painterResource(id = backgroundRes),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
+            // Скин — отдельная капибара целиком: одежда на нём не рисуется
+            // (её и не надевают, пока скин активен). Mood у скина нет.
+            val capybaraRes = skinRes ?: PetSprite.of(
+                itemIds = state.selectedItemIds,
+                mood = MoodLevel.from(stats?.moodScore ?: 50)
+            )
             Image(
-                painter = painterResource(
-                    id = PetSprite.of(
-                        itemIds = state.selectedItemIds,
-                        mood = MoodLevel.from(stats?.moodScore ?: 50)
-                    )
-                ),
+                painter = painterResource(id = capybaraRes),
                 contentDescription = "Капибара",
                 // Спрайт вытянут по вертикали (89x137 против квадрата):
                 // задаём высоту, чтобы капибара занимала сцену целиком.
@@ -208,7 +218,8 @@ fun MainScreen(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .statusBarsPadding()
-                        .padding(12.dp)
+                        .padding(12.dp),
+                    onCheatClick = onCheatClick
                 )
                 MoodCard(
                     stats = stats,
@@ -617,44 +628,21 @@ private fun StubTab(title: String, text: String) {
 }
 
 @Composable
-private fun CoinPill(coins: Int, modifier: Modifier = Modifier) {
-//    Card(
-//        modifier = modifier,
-//        shape = RoundedCornerShape(16.dp),
-//        colors = CardDefaults.cardColors(containerColor = Color.White)
-//    ) {
-//        Row(
-//            verticalAlignment = Alignment.CenterVertically,
-//            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-//        ) {
-//            Icon(
-//                imageVector = Icons.Filled.Star,
-//                contentDescription = null,
-//                tint = StarYellow,
-//                modifier = Modifier.size(28.dp)
-//            )
-//            Spacer(modifier = Modifier.width(4.dp))
-//            Text(
-//                text = coins.toString(),
-//                fontSize = 20.sp,
-//                fontWeight = FontWeight.Bold,
-//                color = Color.Black
-//            )
-//        }
-//    }
+private fun CoinPill(coins: Int, modifier: Modifier = Modifier, onCheatClick: () -> Unit) {
     Box(
         modifier = modifier
-            .padding(horizontal = 12.dp, vertical = 8.dp),      // Внутренние отступы плашки
-        contentAlignment = Alignment.CenterStart                // Выравниваем содержимое по левому краю
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .clickable (onClick = onCheatClick),
+        contentAlignment = Alignment.CenterStart,
     ) {
         Icon(
-            painterResource(R.drawable.wallet),
-            contentDescription = null,
-            tint = Color.Unspecified,
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(start = 4.dp)
-        )
+                painterResource(R.drawable.wallet),
+                contentDescription = null,
+                tint = Color.Unspecified,
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 4.dp)
+            )
         Text(
             text = coins.toString(),
             fontSize = 20.sp,
@@ -843,7 +831,9 @@ private fun MainScreenPreview() {
                 news = NewsResponse.fromJson(),
                 selectedTab = MainTab.NEWS
             ),
-            shopState = ShopUiState(),
+            shopState = ShopUiState(items = GetShopItemsUseCase()()),
+            backgroundRes = R.drawable.new_background,
+            skinRes = null,
             snakeState = SnakeState(
                 snake = listOf(16 to 16),
                 food = 5 to 5,
@@ -864,6 +854,7 @@ private fun MainScreenPreview() {
             refreshNews = {},
             onTodayClick = {},
             onDateSelected = {},
+            onCheatClick = {},
             onBuyClick = {},
             onSelectClick = {},
             onShopBackClick = {},

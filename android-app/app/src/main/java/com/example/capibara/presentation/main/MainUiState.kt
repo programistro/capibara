@@ -15,6 +15,13 @@ data class MainUiState(
     val isFormOpen: Boolean = false,
     /** Все надетые предметы. Пустой набор — капибара без аксессуаров. */
     val selectedItemIds: Set<Int> = emptySet(),
+    /**
+     * Надетый фон сцены. null — пользователь снял все фоны, на экране
+     * показан пейзаж по умолчанию.
+     */
+    val selectedBackgroundId: Int? = null,
+    /** Надетый бесплатный скин. null — обычная капибара. */
+    val selectedSkinId: Int? = null,
     val isRefreshing: Boolean = false,
     val newsError: String? = null,
     /** Какая игра открыта полноэкранно. null — показан список игр. */

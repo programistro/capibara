@@ -14,6 +14,8 @@ import com.example.capibara.presentation.auth.AuthScreen
 import com.example.capibara.presentation.auth.AuthViewModel
 import com.example.capibara.presentation.games.SnakeViewModel
 import com.example.capibara.presentation.games.dino.DinoGameState
+import com.example.capibara.domain.model.BackgroundSprite
+import com.example.capibara.domain.model.SkinSprite
 import com.example.capibara.presentation.main.MainScreen
 import com.example.capibara.presentation.main.MainTab
 import com.example.capibara.presentation.main.MainViewModel
@@ -106,7 +108,12 @@ fun AppNavGraph(startDestination: String) {
                 onBuyClick = shopViewModel::onBuyClick,
                 onSelectClick = shopViewModel::toggleItem,
                 onClearError = shopViewModel::onClearError,
+                onCheatClick = mainViewModel::onCheatClick,
                 onShopBackClick = { mainViewModel.onTabSelected(MainTab.HOME) },
+                // Фон — товар магазина; пока ничего не куплено, показываем
+                // пейзаж по умолчанию.
+                backgroundRes = BackgroundSprite.drawable(state.selectedBackgroundId),
+                skinRes = SkinSprite.drawable(state.selectedSkinId),
                 onFormTitleChange = formViewModel::onTitleChange,
                 onFormDateChange = formViewModel::onDateChange,
                 onFormTimeChange = formViewModel::onTimeChange,
