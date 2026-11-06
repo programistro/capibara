@@ -36,7 +36,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
@@ -49,7 +48,6 @@ import com.example.capibara.presentation.games.dino.model.CactusModel
 import com.example.capibara.presentation.games.dino.model.CloudModel
 import com.example.capibara.presentation.games.dino.model.DinoState
 import com.example.capibara.presentation.games.dino.model.DinoWorld
-import com.example.capibara.presentation.games.dino.model.EarthModel
 import com.example.capibara.ui.theme.CapibaraTheme
 import com.example.capibara.ui.theme.IconDark
 import com.example.capibara.ui.theme.PrimaryGreen
@@ -140,7 +138,10 @@ fun DinoGameScreen(
                 // Мир должен знать ширину экрана — подгоняем перед отрисовкой.
                 state.configure(size.width.toInt())
 
-                drawEarth(state.earth)
+                // Дорожка не зависит от блоков земли: пунктир строится
+                // в экранных координатах и виден всегда, в том числе
+                // под динозавром.
+                drawEarth()
                 drawClouds(state.clouds)
                 drawCacti(state.cacti)
                 drawDino(state.dino)
@@ -269,7 +270,7 @@ private fun GameOverOverlay(onRestart: () -> Unit) {
 
 // ---------- Отрисовка ----------
 
-private fun DrawScope.drawEarth(blocks: List<EarthModel>) {
+private fun DrawScope.drawEarth() {
     drawLine(
         color = DinoInk,
         start = Offset(0f, DinoWorld.GROUND_Y),
@@ -277,21 +278,30 @@ private fun DrawScope.drawEarth(blocks: List<EarthModel>) {
         strokeWidth = DinoWorld.GROUND_STROKE
     )
 
-    blocks.forEach { block ->
-        drawLine(
-            color = DinoInk,
-            start = Offset(block.xPos, DinoWorld.GROUND_Y + 20),
-            end = Offset(block.xPos + block.size, DinoWorld.GROUND_Y + 20),
-            strokeWidth = DinoWorld.GROUND_STROKE / 5,
-            pathEffect = PathEffect.dashPathEffect(floatArrayOf(20f, 40f), 0f)
-        )
-        drawLine(
-            color = DinoInk,
-            start = Offset(block.xPos, DinoWorld.GROUND_Y + 30),
-            end = Offset(block.xPos + block.size, DinoWorld.GROUND_Y + 30),
-            strokeWidth = DinoWorld.GROUND_STROKE / 5,
-            pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 50f), 40f)
-        )
+    // Пунктир рисуем отдельными штрихами на всю ширину экрана, а не двумя
+    // линиями по размеру блока. В master блоки земли копируются так, что
+    // один из них уезжал за левый край, и дорожка под динозавром пропадала,
+    // пока следующий блок не подходил к правому краю.
+    drawDashedLine(y = DinoWorld.GROUND_Y + 20, dash = 20f, gap = 40f, phase = 0f)
+    drawDashedLine(y = DinoWorld.GROUND_Y + 30, dash = 15f, gap = 50f, phase = 40f)
+}
+
+/** Горизонтальный пунктир через весь Canvas, сдвинутый на [phase]. */
+private fun DrawScope.drawDashedLine(y: Float, dash: Float, gap: Float, phase: Float) {
+    val period = dash + gap
+    var x = -phase
+    while (x < size.width) {
+        val start = maxOf(x, 0f)
+        val end = minOf(x + dash, size.width)
+        if (end > start) {
+            drawLine(
+                color = DinoInk,
+                start = Offset(start, y),
+                end = Offset(end, y),
+                strokeWidth = DinoWorld.GROUND_STROKE / 5
+            )
+        }
+        x += period
     }
 }
 
