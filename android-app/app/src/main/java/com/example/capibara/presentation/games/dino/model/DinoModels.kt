@@ -81,7 +81,7 @@ object DinoWorld {
     const val CACTUS_MAX_GAP = 640
 
     /** Стартовая скорость прыжка (px за шаг). */
-    const val JUMP_VELOCITY = -52f
+    const val JUMP_VELOCITY = -30f
 
     /**
      * Ускорение свободного падения.

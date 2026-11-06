@@ -290,6 +290,13 @@ object PetSprite {
             "norm" to "pet_hat_1_glasses_2_scarf_norm",
             "cry" to "pet_hat_1_glasses_2_scarf_cry"
         ),
+
+        // Цилиндр + очки 2 + шарф + пиджак.
+        "hat_1_glasses_2_scarf_jacket" to mapOf(
+            "happy" to "pet_hat_1_glasses_2_scarf_jacket_happy",
+            "norm" to "pet_hat_1_glasses_2_scarf_jacket_norm",
+            "cry" to "pet_hat_1_glasses_2_scarf_jacket_cry"
+        ),
         "hat_2_glasses_1_jacket" to mapOf(
             "happy" to "pet_hat_2_glasses_1_jacket_happy",
             "norm" to "pet_hat_2_glasses_1_jacket_norm",
@@ -387,6 +394,9 @@ private fun drawableByName(name: String): Int = when (name) {
     "pet_hat_1_glasses_2_scarf_happy" -> R.drawable.pet_hat_1_glasses_2_scarf_happy
     "pet_hat_1_glasses_2_scarf_norm" -> R.drawable.pet_hat_1_glasses_2_scarf_norm
     "pet_hat_1_glasses_2_scarf_cry" -> R.drawable.pet_hat_1_glasses_2_scarf_cry
+    "pet_hat_1_glasses_2_scarf_jacket_happy" -> R.drawable.pet_hat_1_glasses_2_scarf_happy
+    "pet_hat_1_glasses_2_scarf_jacket_norm" -> R.drawable.pet_hat_1_glasses_2_scarf_norm
+    "pet_hat_1_glasses_2_scarf_jacket_cry" -> R.drawable.pet_hat_1_glasses_2_scarf_cry
     "pet_hat_2_glasses_1_jacket_happy" -> R.drawable.pet_hat_2_glasses_1_jacket_happy
     "pet_hat_2_glasses_1_jacket_norm" -> R.drawable.pet_hat_2_glasses_1_jacket_norm
     "pet_hat_2_glasses_1_jacket_cry" -> R.drawable.pet_hat_2_glasses_1_jacket_cry

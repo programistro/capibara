@@ -182,7 +182,7 @@ fun MainScreen(
                 .height(330.dp)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.background_forest),
+                painter = painterResource(id = R.drawable.new_background),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -197,7 +197,7 @@ fun MainScreen(
                 contentDescription = "Капибара",
                 // Спрайт вытянут по вертикали (89x137 против квадрата):
                 // задаём высоту, чтобы капибара занимала сцену целиком.
-                contentScale = ContentScale.Fit,
+                contentScale = ContentScale.Inside,
                 modifier = Modifier
                     .height(300.dp)
                     .align(Alignment.BottomCenter)

@@ -93,4 +93,15 @@ class PetSpriteTest {
         assertNotNull(res)
         assertTrue("ресурс должен быть ненулевым", res != 0)
     }
+
+    @Test
+    fun `комплект из четырёх предметов находится точной картинкой`() {
+        // Цилиндр + очки 2 + шарф + пиджак — единственный четырёхпредметный
+        // комплект в cells/. В имени файла шарф и очки когда-то стояли в
+        // обратном порядке, и набор молча откатывался к трёхпредметному.
+        val ids = setOf(1, 7, 4, 3)
+        assertTrue(PetSprite.hasExact(ids, MoodLevel.HAPPY))
+        assertTrue(PetSprite.hasExact(ids, MoodLevel.NORMAL))
+        assertTrue(PetSprite.hasExact(ids, MoodLevel.CRYING))
+    }
 }

@@ -69,7 +69,7 @@ class PetSpriteCoverageTest {
         }
 
         assertTrue("в карте не хватает спрайтов: $missing", missing.isEmpty())
-        assertTrue("каталог должен содержать 26 комплектов", combos.size == 26)
+        assertTrue("каталог должен содержать 27 комплектов", combos.size == 27)
     }
 
     @Test
