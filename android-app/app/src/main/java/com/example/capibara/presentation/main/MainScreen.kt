@@ -76,6 +76,8 @@ import com.example.capibara.presentation.games.GameKind
 import com.example.capibara.presentation.games.GamesHubScreen
 import com.example.capibara.presentation.games.dino.DinoGameScreen
 import com.example.capibara.presentation.games.dino.DinoGameState
+import com.example.capibara.presentation.games.minesweeper.MinesweeperScreen
+import com.example.capibara.presentation.games.minesweeper.MinesweeperState
 import com.example.capibara.presentation.shop.ShopScreen
 import com.example.capibara.presentation.shop.ShopUiState
 import com.example.capibara.ui.theme.CapibaraTheme
@@ -130,6 +132,9 @@ fun MainScreen(
     RequestNotificationPermission()
     val stats = state.petStats
     val activeGame = state.activeGame
+    // Сапёр, как и динозавр, живёт в remember экрана: партия продолжается,
+    // пока экран не будет удалён из композиции.
+    val minesweeperState = remember { MinesweeperState() }
 
     // Полноэкранный режим игры: шапка с капибарой и нижнее меню скрыты,
     // игра занимает весь экран. Выход — крестик в шапке самой игры.
@@ -161,6 +166,12 @@ fun MainScreen(
                 )
                 GameKind.DINO -> DinoGameScreen(
                     state = dinoState,
+                    fullscreen = true,
+                    onToggleFullscreen = onExitGame,
+                    modifier = inner
+                )
+                GameKind.MINESWEEPER -> MinesweeperScreen(
+                    state = minesweeperState,
                     fullscreen = true,
                     onToggleFullscreen = onExitGame,
                     modifier = inner
