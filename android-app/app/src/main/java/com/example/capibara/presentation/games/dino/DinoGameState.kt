@@ -109,6 +109,9 @@ class DinoGameState {
         stepDebt = (stepDebt - steps).coerceIn(0f, 1f)
 
         while (steps-- > 0) {
+            // Ширину знает только Canvas; до первого configure() мир не шагаем,
+            // иначе облака переносились бы по нулевой ширине.
+            if (deviceWidth <= 0) return
             if (step()) return
         }
     }
@@ -154,7 +157,13 @@ class DinoGameState {
         var startX = 150
         repeat(DinoWorld.MAX_CLOUDS) {
             list.add(CloudModel(xPos = startX, yPos = Random.nextInt(0, 100)))
-            startX += deviceWidth + Random.nextInt(150, deviceWidth + 1)
+            // До первого configure() ширины нет: `nextInt(150, deviceWidth + 1)`
+            // с deviceWidth = 0 давал границы 150..1 и роняла конструктор.
+            startX += deviceWidth + if (deviceWidth > CLOUD_GAP_MIN) {
+                Random.nextInt(CLOUD_GAP_MIN, deviceWidth + 1)
+            } else {
+                CLOUD_GAP_MIN
+            }
         }
         clouds = list
     }
@@ -236,7 +245,7 @@ class DinoGameState {
             // Случайный scale мог сжать следующий кактус левее предыдущего:
             // сдвигаем, чтобы между ними оставалась дырка.
             if (!spacingOk(list.last(), next.xPos)) {
-                next.xPos = list.last().xPos + list.last().bounds().width + nextCactusGap()
+                next.xPos = (list.last().xPos + list.last().bounds().width + nextCactusGap()).toInt()
             }
             list.add(next)
         }
@@ -245,7 +254,7 @@ class DinoGameState {
 
     private fun nextCactusX(last: CactusModel): Int {
         val previousRight = last.xPos + last.bounds().width
-        var nextX = previousRight + nextCactusGap()
+        var nextX = (previousRight + nextCactusGap()).toInt()
         // Высота кактуса зависит от scale, а дистанция — от его края,
         // иначе высокий кактус визуально «догоняет» предыдущий.
         if (nextX < deviceWidth + 150) nextX = deviceWidth + 150
@@ -254,6 +263,9 @@ class DinoGameState {
 
     private companion object {
         const val CACTUS_COUNT = 3
+
+        /** Минимальный зазор между облаками при переносе из `initClouds`. */
+        const val CLOUD_GAP_MIN = 150
 
         /** Потолок частоты экрана, который учитываем (8 Гц — явно зависший кадр). */
         const val MAX_FRAME_NANOS = 125_000_000L
