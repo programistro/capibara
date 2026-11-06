@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material3.Card
@@ -39,7 +40,8 @@ import com.example.capibara.ui.theme.PrimaryGreen
 /** Какая игра выбрана на вкладке «Игры». */
 enum class GameKind(val title: String, val subtitle: String) {
     SNAKE("Змейка", "Ешьте еду и зарабатывайте монеты"),
-    DINO("Динозавр", "Прыгайте через кактусы");
+    DINO("Динозавр", "Прыгайте через кактусы"),
+    MINESWEEPER("Сапёр", "Найдите все мины, не взорвавшись");
 }
 
 /**
@@ -147,6 +149,7 @@ private fun GameKind.icon(): ImageVector = when (this) {
     GameKind.SNAKE -> Icons.Filled.SportsEsports
     // Динозавру своей иконки в наборе нет — берём ближайшую по смыслу.
     GameKind.DINO -> Icons.Filled.Pets
+    GameKind.MINESWEEPER -> Icons.Filled.Flag
 }
 
 @Preview(showBackground = true, widthDp = 400, heightDp = 700)
