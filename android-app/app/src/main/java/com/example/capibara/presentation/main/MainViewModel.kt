@@ -3,7 +3,7 @@ package com.example.capibara.presentation.main
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.capibara.domain.model.BackgroundSprite
-import com.example.capibara.domain.model.PetSprite
+import com.example.capibara.domain.model.ClothingSprite
 import com.example.capibara.domain.model.SkinSprite
 import com.example.capibara.domain.repository.InventoryRepository
 import com.example.capibara.domain.repository.MoodRepository
@@ -62,12 +62,12 @@ class MainViewModel @Inject constructor(
 
         viewModelScope.launch {
             inventoryRepository.observeSelectedIds().collect { items ->
-                // Один поток на одежду и фон: одежда используется спрайтами,
-                // фон — картинкой сцены. Фоны в спрайтовый набор не попадают,
-                // иначе их id вытесняют одежду при фолбэке.
+                // Один поток на одежду, фон и скин: одежда идёт слоями
+                // в CapybaraFigure, фон — картинкой сцены, скин заменяет
+                // капибару целиком.
                 _uiState.update {
                     it.copy(
-                        selectedItemIds = items.filter { id -> id in PetSprite.ACCESSORY_IDS }.toSet(),
+                        selectedItemIds = items.filter { id -> id in ClothingSprite.itemIds }.toSet(),
                         selectedBackgroundId = BackgroundSprite.selectedAmong(items),
                         selectedSkinId = SkinSprite.selectedAmong(items)
                     )

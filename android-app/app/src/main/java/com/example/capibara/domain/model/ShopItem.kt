@@ -22,6 +22,9 @@ data class ShopItem(
 
     /** Товар, у которого не может быть нескольких надетых одновременно. */
     val isSingleton: Boolean get() = isBackground || isSkin
+
+    /** Одежда: рисуется слоем поверх капибары, предметов может быть много. */
+    val isClothing: Boolean get() = !isBackground && !isSkin
 }
 
 object ShopSlot {

@@ -113,7 +113,7 @@ fun AppNavGraph(startDestination: String) {
                 // Фон — товар магазина; пока ничего не куплено, показываем
                 // пейзаж по умолчанию.
                 backgroundRes = BackgroundSprite.drawable(state.selectedBackgroundId),
-                skinRes = SkinSprite.drawable(state.selectedSkinId),
+                skinId = state.selectedSkinId,
                 onFormTitleChange = formViewModel::onTitleChange,
                 onFormDateChange = formViewModel::onDateChange,
                 onFormTimeChange = formViewModel::onTimeChange,

@@ -1,6 +1,7 @@
 package com.example.capibara.presentation.shop
 
 import com.example.capibara.domain.model.BackgroundSprite
+import com.example.capibara.domain.model.ClothingSprite
 import com.example.capibara.domain.model.MoodLevel
 import com.example.capibara.domain.model.previewSpriteName
 import com.example.capibara.domain.usecase.GetShopItemsUseCase
@@ -22,15 +23,15 @@ class ShopPreviewTest {
     private val catalog = GetShopItemsUseCase()()
 
     /** Карточки одежды; фоны и скины проверяются отдельными тестами. */
-    private val items = catalog.filter { !it.isBackground && !it.isSkin }
-
-    private fun previews(selected: Set<Int>, mood: MoodLevel): Map<Int, String> =
-        items.associate { it.id to previewSpriteName(it.id, selected, mood) }
+    private val items = catalog.filter { it.isClothing }
 
     @Test
-    fun `пустая витрина показывает девять разных картинок`() {
-        val images = previews(emptySet(), MoodLevel.NORMAL)
-        assertEquals("все 9 карточек должны быть разными: $images", 9, images.values.toSet().size)
+    fun `каждая одежда рисуется своим слоем`() {
+        val keys = items.map { shopPreview(it.id) }
+            .filterIsInstance<ShopPreview.Clothing>()
+            .map { it.key }
+        assertEquals("все 9 карточек должны иметь свой слой: $keys", 9, keys.toSet().size)
+        assertEquals(items.map { ClothingSprite.keyOf(it.id) }, keys)
     }
 
     @Test
@@ -49,19 +50,6 @@ class ShopPreviewTest {
                 previewSpriteName(item.id, emptySet(), MoodLevel.NORMAL)
             )
         }
-    }
-
-    @Test
-    fun `карточки не дублируются при любом надетом наборе`() {
-        val moods = listOf(MoodLevel.CRYING, MoodLevel.NORMAL, MoodLevel.HAPPY, MoodLevel.SURPRISE)
-        val failures = mutableListOf<String>()
-        moods.forEach { mood ->
-            subsets(items.map { it.id }.toSet()).forEach { selected ->
-                val distinct = previews(selected, mood).values.toSet().size
-                if (distinct != 9) failures.add("$mood, надето $selected: разных $distinct")
-            }
-        }
-        assertEquals("карточки магазина дублируются: $failures", emptyList<String>(), failures)
     }
 
     @Test
@@ -128,12 +116,5 @@ class ShopPreviewTest {
         val names = catalog.filter { it.isSkin }
             .map { previewSpriteName(it.id, emptySet(), MoodLevel.NORMAL) }
         assertEquals(3, names.toSet().size)
-    }
-
-    private fun subsets(ids: Set<Int>): List<Set<Int>> {
-        val list = ids.toList()
-        return (0 until (1 shl list.size)).map { mask ->
-            list.filterIndexed { index, _ -> mask and (1 shl index) != 0 }.toSet()
-        }
     }
 }

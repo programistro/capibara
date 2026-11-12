@@ -3,38 +3,45 @@ package com.example.capibara.domain.model
 import androidx.annotation.DrawableRes
 
 /**
- * Имя drawable карточки магазина — по умолчанию то, что вернул бы
- * [PetSprite.of]. Отдельно от `R.drawable`, чтобы проверять превью
- * в JVM-тестах, где `R` — заглушка. Фоны и скины в [PetSprite] не входят
- * и возвращают имя своей картинки.
+ * Что показывать в карточке магазина.
+ *
+ * Карточка одежды должна отличаться от соседних, даже если надеты все
+ * девять предметов: раньше её превью собиралось из готовой склейки, и при
+ * частичном совпадении карточки схлопывались в одну картинку. Теперь одежда
+ * рисуется слоем поверх базы, и карточка показывает просто свой предмет.
  */
-fun previewSpriteName(itemId: Int, selectedIds: Set<Int>, mood: MoodLevel): String {
-    if (BackgroundSprite.isBackground(itemId)) return BackgroundSprite.nameOf(itemId)
-    SkinSprite.nameOf(itemId)?.let { return it }
-    val isSelected = itemId in selectedIds
-    if (!isSelected) {
-        val withItem = selectedIds + itemId
-        PetSprite.exactName(withItem, mood)?.let { return it }
-        return PetSprite.exactName(setOf(itemId), mood) ?: PetSprite.keyOf(setOf(itemId))
-    }
-    // Надето «всё» — рисуем предмет без остальных одежд: наряд и так виден
-    // на карточках соседей, а здесь нужно узнаваемое превью.
-    if (selectedIds.size > 1) {
-        return PetSprite.exactName(setOf(itemId), mood) ?: PetSprite.keyOf(setOf(itemId))
-    }
-    return PetSprite.exactName(selectedIds, mood) ?: PetSprite.keyOf(selectedIds)
+sealed interface ShopPreview {
+
+    /** Одежда: базовая капибара + этот предмет слоем. */
+    data class Clothing(val key: String) : ShopPreview
+
+    /** Фон сцены. */
+    data class Background(val itemId: Int) : ShopPreview
+
+    /** Скин целиком. */
+    data class Skin(val itemId: Int) : ShopPreview
 }
 
-/** Спрайт карточки магазина: то же решение, что в [previewSpriteName]. */
+/** Описание карточки: что за товар и на какой слой смотреть. */
+fun shopPreview(itemId: Int): ShopPreview = when {
+    BackgroundSprite.isBackground(itemId) -> ShopPreview.Background(itemId)
+    SkinSprite.isSkin(itemId) -> ShopPreview.Skin(itemId)
+    else -> ShopPreview.Clothing(ClothingSprite.keyOf(itemId) ?: "")
+}
+
+/** Имя drawable карточки — для тестов на JVM, где `R` — заглушка. */
+fun previewSpriteName(itemId: Int, selectedIds: Set<Int>, mood: MoodLevel): String =
+    when (val preview = shopPreview(itemId)) {
+        is ShopPreview.Clothing -> PetSprite.nameOf(mood)
+        is ShopPreview.Background -> BackgroundSprite.nameOf(itemId)
+        is ShopPreview.Skin -> SkinSprite.nameOf(itemId) ?: "pet_norm_norm"
+    }
+
+/** Изображение-подложка карточки (не включая слой одежды). */
 @DrawableRes
 fun previewSprite(itemId: Int, selectedIds: Set<Int>, mood: MoodLevel): Int =
-    if (BackgroundSprite.isBackground(itemId)) {
-        BackgroundSprite.drawable(itemId)
-    } else SkinSprite.drawable(itemId) ?: PetSprite.of(
-        itemIds = if (itemId in selectedIds || PetSprite.hasExact(selectedIds + itemId, mood)) {
-            selectedIds + itemId
-        } else {
-            setOf(itemId)
-        },
-        mood = mood
-    )
+    when (val preview = shopPreview(itemId)) {
+        is ShopPreview.Clothing -> PetSprite.base(mood)
+        is ShopPreview.Background -> BackgroundSprite.drawable(itemId)
+        is ShopPreview.Skin -> SkinSprite.drawable(itemId) ?: PetSprite.base(mood)
+    }

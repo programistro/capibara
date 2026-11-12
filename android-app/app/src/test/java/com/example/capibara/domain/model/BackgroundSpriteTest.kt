@@ -40,7 +40,7 @@ class BackgroundSpriteTest {
     fun `id фонов не попадают в спрайты одежды`() {
         backgrounds.forEach {
             assertFalse("${it.id} должен быть фоном, а не одеждой",
-                it.id in PetSprite.ACCESSORY_IDS)
+                it.id in ClothingSprite.itemIds)
         }
     }
 

@@ -7,6 +7,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -85,17 +87,19 @@ fun MinesweeperScreen(
     fullscreen: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    // Таймер в UI, как у «Динозавра»: пока не открыта первая клетка и пока
-    // партия жива. Перезапускается вместе с партией через разовый тик.
-    LaunchedEffect(state.isFinished, state.openedSafe) {
-        if (state.isFinished) return@LaunchedEffect
+    // Таймер в UI, как у «Динозавра». Стартует один раз и молчит, пока
+    // не открыта первая клетка (`tick` сам это учитывает). Привязывать
+    // LaunchedEffect к `openedSafe` нельзя: состояние меняется на экранной
+    // потоке, и каждый такой перезапуск повторно тащил бы все клетки поля.
+    LaunchedEffect(state) {
         var last = 0L
         while (true) {
-            withFrameNanos { now ->
+            val finished = withFrameNanos { now ->
                 if (last != 0L) state.tick(now - last)
                 last = now
+                state.isFinished
             }
-            if (state.isFinished) break
+            if (finished) break
         }
     }
 
@@ -106,14 +110,14 @@ fun MinesweeperScreen(
             onToggleFullscreen = onToggleFullscreen,
         )
 
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 12.dp, vertical = 4.dp),
             contentAlignment = Alignment.Center,
         ) {
-            MineBoard(state = state)
+            MineBoard(state = state, maxWidth = maxWidth, maxHeight = maxHeight)
 
             if (state.isFinished) {
                 MineResultOverlay(
@@ -150,21 +154,24 @@ private fun MinesweeperHeader(
             }
         }
 
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "Сапёр",
-                fontSize = if (fullscreen) 22.sp else 26.sp,
-                fontWeight = FontWeight.Bold,
-                color = IconDark
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Флаги: ", fontSize = 15.sp, color = IconDark.copy(alpha = 0.6f))
-                Text("${state.flagsLeft}", fontSize = 15.sp, color = IconDark)
-                Text("   Время: ", fontSize = 15.sp, color = IconDark.copy(alpha = 0.6f))
-                Text(formatTime(state.elapsedSeconds), fontSize = 15.sp, color = IconDark)
-            }
-        }
 
+//        Column(modifier = Modifier.weight(1f)) {
+//            Text(
+//                text = "Сапёр",
+//                fontSize = if (fullscreen) 22.sp else 26.sp,
+//                fontWeight = FontWeight.Bold,
+//                color = IconDark,
+//                maxLines = 1
+//            )
+//            // Одна строка и без переносов: «Флаги: 10   Время: 00:00» должно
+//            // влезать целиком, иначе шапка раздувается и съедает поле.
+//            Row(verticalAlignment = Alignment.CenterVertically) {
+//                Text("Флаги: ", fontSize = 15.sp, color = IconDark.copy(alpha = 0.6f), maxLines = 1)
+//                Text("${state.flagsLeft}", fontSize = 15.sp, color = IconDark, maxLines = 1)
+//                Text("  Время: ", fontSize = 15.sp, color = IconDark.copy(alpha = 0.6f), maxLines = 1)
+//                Text(formatTime(state.elapsedSeconds), fontSize = 15.sp, color = IconDark, maxLines = 1)
+//            }
+//        }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             MineDifficulty.entries.forEach { difficulty ->
                 FilterChip(
@@ -181,24 +188,56 @@ private fun MinesweeperHeader(
     }
 }
 
+/**
+ * Размер поля в пикселях под доступную область [maxWidth] × [maxHeight].
+ *
+ * Ширина и высота берутся по меньшему из двух ограничений, чтобы поле
+ * целиком помещалось на экране: иначе «Сложный» (16×30) вырастает по ширине
+ * до ~2200 px и уезжает под футер с шапкой.
+ */
+private fun boardSize(
+    maxWidth: Float,
+    maxHeight: Float,
+    columns: Int,
+    rows: Int,
+): androidx.compose.ui.geometry.Size {
+    val width = maxWidth.coerceAtLeast(0f)
+    val height = maxHeight.coerceAtLeast(0f)
+    val byWidth = width / columns
+    val byHeight = height / rows
+    val cell = minOf(byWidth, byHeight)
+    return androidx.compose.ui.geometry.Size(cell * columns, cell * rows)
+}
+
 @Composable
-private fun MineBoard(state: MinesweeperState) {
+private fun MineBoard(
+    state: MinesweeperState,
+    maxWidth: androidx.compose.ui.unit.Dp,
+    maxHeight: androidx.compose.ui.unit.Dp,
+) {
     val columns = state.difficulty.size.columns
     val rows = state.difficulty.size.rows
-    // Поле всегда квадратное: одна клетка берёт долю исходной ширины, а
-    // не «как влезет» — иначе текст в клетках прыгает при смене сложности.
-    val sideModifier = Modifier
-        .fillMaxWidth()
-        .widthIn(max = 560.dp)
-        .padding(vertical = 4.dp)
+    // Площадь клетки считаем в пикселях от реального ограничения, а не от
+    // ширины экрана: тогда поле вписывается и по высоте.
+    val board = boardSize(
+        maxWidth = with(androidx.compose.ui.platform.LocalDensity.current) {
+            (maxWidth.coerceAtMost(560.dp)).toPx()
+        },
+        maxHeight = with(androidx.compose.ui.platform.LocalDensity.current) { maxHeight.toPx() },
+        columns = columns,
+        rows = rows,
+    )
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val boardModifier = Modifier
+        .size(
+            width = with(density) { board.width.toDp() },
+            height = with(density) { board.height.toDp() },
+        )
+        .clip(RoundedCornerShape(12.dp))
+        .background(MineCellOpen)
+        .border(2.dp, MineBoardBorder, RoundedCornerShape(12.dp))
 
-    Column(
-        modifier = sideModifier
-            .aspectRatio(columns / rows.toFloat())
-            .clip(RoundedCornerShape(12.dp))
-            .background(MineCellOpen)
-            .border(2.dp, MineBoardBorder, RoundedCornerShape(12.dp)),
-    ) {
+    Column(modifier = boardModifier) {
         repeat(rows) { row ->
             Row(modifier = Modifier.weight(1f)) {
                 repeat(columns) { column ->
@@ -304,48 +343,59 @@ private fun Modifier.combinedClickableWithoutRipple(
 
 @Composable
 private fun MineFooter(state: MinesweeperState) {
-    Row(
+    // Подсказка живёт отдельной строкой под кнопками: в одну строку с чипом
+    // и счётчиком она не влезала и разваливалась на три обрывочных куска.
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        AssistChip(
-            onClick = state::toggleInputMode,
-            label = {
-                Text(
-                    if (state.inputMode == MineInputMode.REVEAL) "Открыть" else "Флажок",
-                    fontSize = 13.sp,
-                )
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = if (state.inputMode == MineInputMode.REVEAL) {
-                        Icons.Filled.RemoveCircleOutline
-                    } else {
-                        Icons.Filled.Flag
-                    },
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                )
-            },
-            colors = AssistChipDefaults.assistChipColors(
-                containerColor = PrimaryGreen,
-                labelColor = IconDark,
-                leadingIconContentColor = IconDark,
-            ),
-        )
-        Text(
-            text = "Открыто ${state.openedSafe} из ${state.difficulty.size.total - state.totalMines}",
-            fontSize = 13.sp,
-            color = IconDark.copy(alpha = 0.65f),
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AssistChip(
+                onClick = state::toggleInputMode,
+                label = {
+                    Text(
+                        if (state.inputMode == MineInputMode.REVEAL) "Открыть" else "Флажок",
+                        fontSize = 13.sp,
+                        maxLines = 1,
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = if (state.inputMode == MineInputMode.REVEAL) {
+                            Icons.Filled.RemoveCircleOutline
+                        } else {
+                            Icons.Filled.Flag
+                        },
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                    )
+                },
+                colors = AssistChipDefaults.assistChipColors(
+                    containerColor = PrimaryGreen,
+                    labelColor = IconDark,
+                    leadingIconContentColor = IconDark,
+                ),
+            )
+            Text(
+                text = "Открыто ${state.openedSafe} из ${state.difficulty.size.total - state.totalMines}",
+                fontSize = 13.sp,
+                color = IconDark.copy(alpha = 0.65f),
+                maxLines = 1,
+            )
+        }
         Text(
             text = "Тап — открыть, удержание — флажок",
             fontSize = 12.sp,
             color = IconDark.copy(alpha = 0.5f),
             textAlign = TextAlign.Center,
+            maxLines = 1,
         )
     }
 }

@@ -3,6 +3,7 @@ package com.example.capibara.presentation.shop
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.capibara.domain.model.BackgroundSprite
+import com.example.capibara.domain.model.ClothingSprite
 import com.example.capibara.domain.model.ShopItem
 import com.example.capibara.domain.model.SkinSprite
 import com.example.capibara.domain.repository.InventoryRepository
@@ -92,8 +93,9 @@ class ShopViewModel @Inject constructor(
             SkinSprite.itemIds
                 .filter { it in state.selectedIds }
                 .forEach { inventoryRepository.unselect(it) }
+            // Одежда на скине не рисуется, поэтому её снимаем.
             state.selectedIds
-                .filter { it in state.accessoryIds }
+                .filter { it in ClothingSprite.itemIds }
                 .forEach { inventoryRepository.unselect(it) }
         }
         inventoryRepository.setSelected(item.id, true)

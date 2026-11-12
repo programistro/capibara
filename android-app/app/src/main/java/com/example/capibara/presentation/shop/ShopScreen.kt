@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -40,6 +42,7 @@ import com.example.capibara.domain.model.MoodLevel
 import com.example.capibara.domain.model.ShopItem
 import com.example.capibara.domain.model.ShopSlot
 import com.example.capibara.domain.model.previewSprite
+import com.example.capibara.presentation.common.CapybaraFigure
 import com.example.capibara.presentation.common.GreenButton
 import com.example.capibara.ui.theme.CapibaraTheme
 import com.example.capibara.ui.theme.PrimaryGreen
@@ -120,7 +123,6 @@ fun ShopScreen(
                             item.isBackground -> equipped && item.id in state.selectedIds
                             else -> equipped
                         },
-                        selectedIds = state.accessorySelectedIds,
                         mood = mood,
                         onBuyClick = { onBuyClick(item) },
                         onToggleClick = { onSelectClick(item) }
@@ -174,7 +176,6 @@ private fun ShopItemCard(
     equipped: Boolean,
     canRemove: Boolean,
     mood: MoodLevel,
-    selectedIds: Set<Int>,
     onBuyClick: () -> Unit,
     onToggleClick: () -> Unit
 ) {
@@ -194,10 +195,6 @@ private fun ShopItemCard(
                 } else Modifier
             )
     ) {
-        // Превью показывает предмет в контексте надетого, но так, чтобы
-        // карточка не повторила соседнюю: при надетых «цилиндр + пиджак»
-        // любая третья вещь сворачивалась к этой же картинке, и вся витрина
-        // показывала один и тот же спрайт. Логика — в previewSprite (SpritePreview.kt).
         if (item.isSkin) {
             // Скин — горизонтальная капибара без прозрачных полей;
             // превью 16:9, чтобы поместилась целиком.
@@ -224,13 +221,22 @@ private fun ShopItemCard(
                     .clip(RoundedCornerShape(12.dp))
             )
         } else {
-            Image(
-                painter = painterResource(
-                    id = previewSprite(item.id, selectedIds, mood)
-                ),
-                contentDescription = item.name,
-                modifier = Modifier.size(110.dp)
-            )
+            // Одежда — тот же композит, что на главном экране: базовая
+            // капибара + один слой. Карточка видна целиком, поэтому фигура
+            // не «схлопывается» с соседней при надетых предметах.
+            Box(
+                modifier = Modifier
+                    .size(110.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                CapybaraFigure(
+                    mood = mood,
+                    itemIds = setOf(item.id),
+                    modifier = Modifier.fillMaxHeight(),
+                    contentDescription = item.name
+                )
+            }
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(

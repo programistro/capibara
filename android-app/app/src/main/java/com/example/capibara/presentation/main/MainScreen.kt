@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.capibara.R
 import com.example.capibara.domain.model.PetSprite
+import com.example.capibara.presentation.common.CapybaraFigure
 import com.example.capibara.domain.model.PetStats
 import com.example.capibara.domain.usecase.GetShopItemsUseCase
 import com.example.capibara.domain.model.ShopItem
@@ -123,8 +124,8 @@ fun MainScreen(
     onShopBackClick: () -> Unit,
     /** Купленный фон, который сейчас висит за капибарой. */
     @DrawableRes backgroundRes: Int,
-    /** Спрайт надетого скина; null — обычная капибара. */
-    @DrawableRes skinRes: Int?,
+    /** Надетый скин; null — обычная капибара. */
+    skinId: Int?,
     onClearError: () -> Unit,
     onCheatClick: () -> Unit,
     onFormTitleChange: (String) -> Unit,
@@ -207,18 +208,13 @@ fun MainScreen(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
-            // Скин — отдельная капибара целиком: одежда на нём не рисуется
-            // (её и не надевают, пока скин активен). Mood у скина нет.
-            val capybaraRes = skinRes ?: PetSprite.of(
+            // Капибара: базовая картинка эмоции + одежда слоями в Compose,
+            // либо скин целиком. Спрайт вытянут по вертикали, поэтому
+            // задаём высоту.
+            CapybaraFigure(
+                mood = MoodLevel.from(stats?.moodScore ?: 50),
                 itemIds = state.selectedItemIds,
-                mood = MoodLevel.from(stats?.moodScore ?: 50)
-            )
-            Image(
-                painter = painterResource(id = capybaraRes),
-                contentDescription = "Капибара",
-                // Спрайт вытянут по вертикали (89x137 против квадрата):
-                // задаём высоту, чтобы капибара занимала сцену целиком.
-                contentScale = ContentScale.Inside,
+                skinId = skinId,
                 modifier = Modifier
                     .height(300.dp)
                     .align(Alignment.BottomCenter)
@@ -844,7 +840,7 @@ private fun MainScreenPreview() {
             ),
             shopState = ShopUiState(items = GetShopItemsUseCase()()),
             backgroundRes = R.drawable.new_background,
-            skinRes = null,
+            skinId = null,
             snakeState = SnakeState(
                 snake = listOf(16 to 16),
                 food = 5 to 5,
