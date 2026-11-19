@@ -3,8 +3,10 @@ package com.example.capibara.presentation.shop
 import com.example.capibara.domain.model.BackgroundSprite
 import com.example.capibara.domain.model.ClothingSprite
 import com.example.capibara.domain.model.MoodLevel
+import com.example.capibara.domain.model.ShopPreview
 import com.example.capibara.domain.model.previewSpriteName
 import com.example.capibara.domain.usecase.GetShopItemsUseCase
+import com.example.capibara.domain.model.shopPreview
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
